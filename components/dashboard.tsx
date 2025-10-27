@@ -11,8 +11,9 @@ import { FollowerInsights } from '@/components/follower-insights';
 import { LanguageStats } from '@/components/language-stats';
 import { RateLimitStatus } from '@/components/rate-limit-status';
 import { SearchFeatures } from '@/components/search-features';
+import { GitHubTokenBanner } from '@/components/github-token-banner';
 import { GitHubUser, Repository, GitHubFollower } from '@/types/github';
-import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit } from '@/lib/github-api';
+import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit, hasGitHubToken } from '@/lib/github-api';
 import { toast } from 'sonner';
 
 interface DashboardProps {
@@ -26,11 +27,20 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const [following, setFollowing] = useState<GitHubFollower[]>([]);
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showTokenBanner, setShowTokenBanner] = useState(false);
 
   useEffect(() => {
+    // Check if token is configured
+    setShowTokenBanner(!hasGitHubToken());
+
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Show a toast for large accounts about pagination
+        if (user.followers > 100 || user.following > 100) {
+          toast.info('Fetching all data with pagination. This may take a moment...');
+        }
+
         const [reposData, followersData, followingData, rateLimitData] = await Promise.all([
           fetchUserRepositories(user.login),
           fetchUserFollowers(user.login),
@@ -42,6 +52,10 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         setFollowers(followersData);
         setFollowing(followingData);
         setRateLimit(rateLimitData);
+
+        // Show success message with counts
+        const message = `Loaded ${reposData.length} repositories, ${followersData.length} followers, ${followingData.length} following`;
+        toast.success(message);
       } catch (error) {
         toast.error('Failed to fetch some data');
         console.error('Dashboard data fetch error:', error);
@@ -77,6 +91,8 @@ export function Dashboard({ user, onReset }: DashboardProps) {
 
   return (
     <div className="space-y-6">
+      {showTokenBanner && <GitHubTokenBanner />}
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

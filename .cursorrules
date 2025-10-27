@@ -1,0 +1,295 @@
+# Cursor Rules for GitHub Analytics Dashboard
+
+## Project Overview
+This is a Next.js 13 TypeScript application that provides GitHub profile analytics with a focus on follower insights and repository statistics. It uses the GitHub REST API with optional authentication.
+
+## Code Style & Conventions
+
+### TypeScript
+- Always use TypeScript for new files
+- Use explicit types for function parameters and return values
+- Avoid `any` - use proper types from `types/github.ts`
+- Use interfaces for object shapes, types for unions/primitives
+- Enable strict mode checks
+
+### React & Next.js
+- Use "use client" directive only when needed (state, effects, browser APIs)
+- Prefer Server Components by default (Next.js 13 App Router)
+- Use functional components with hooks
+- Component names in PascalCase
+- File names in kebab-case (e.g., `user-profile.tsx`)
+
+### Component Structure
+```typescript
+"use client"; // Only if needed
+
+import { ... } from '...';
+
+interface ComponentProps {
+  // Props definition
+}
+
+export function ComponentName({ prop1, prop2 }: ComponentProps) {
+  // Hooks at the top
+  const [state, setState] = useState();
+  
+  // Effects and callbacks
+  useEffect(() => {}, []);
+  
+  // Helper functions
+  const handleAction = () => {};
+  
+  // Render
+  return (
+    <div>...</div>
+  );
+}
+```
+
+### Styling
+- Use Tailwind CSS utility classes
+- Follow responsive-first approach (mobile → desktop)
+- Use shadcn/ui components for consistency
+- Dark mode classes: `dark:class-name`
+- Use `cn()` utility from `lib/utils.ts` for conditional classes
+
+### API Integration
+- All GitHub API calls go through `lib/github-api.ts`
+- Use the pagination helper for large datasets
+- Handle errors with try-catch and toast notifications
+- Check token availability with `hasGitHubToken()`
+
+### State Management
+- Use local component state (`useState`)
+- Prop drilling is acceptable for this project size
+- Lift state only when necessary
+- Use `useMemo` for expensive calculations
+- Use `useEffect` for side effects (API calls, subscriptions)
+
+### Error Handling
+- Always wrap API calls in try-catch
+- Show user-friendly error messages with `toast.error()`
+- Log errors to console for debugging
+- Provide fallback UI for error states
+
+### Performance
+- Use `useMemo` for expensive calculations (data filtering, sorting)
+- Memoize callbacks with `useCallback` when passed to child components
+- Avoid unnecessary re-renders
+- Consider loading states for better UX
+
+## File Organization
+
+### New Components
+Place components in `components/` directory:
+- UI primitives: `components/ui/`
+- Feature components: `components/`
+- One component per file
+- Export as named export
+
+### Utilities
+- Helper functions: `lib/utils.ts`
+- API functions: `lib/github-api.ts`
+- Types: `types/github.ts`
+
+## GitHub API Guidelines
+
+### Authentication
+- Token is OPTIONAL
+- Check with `hasGitHubToken()` before showing warnings
+- Never commit tokens to git
+- Use `NEXT_PUBLIC_GITHUB_TOKEN` environment variable
+
+### Pagination
+- Use `fetchPaginatedData<T>()` for lists
+- Automatically handles pagination
+- Shows loading states during fetch
+- Inform users for large datasets (> 100 items)
+
+### Rate Limits
+- Without token: 60 requests/hour
+- With token: 5,000 requests/hour
+- Display rate limit status in UI
+- Provide helpful error messages when limit exceeded
+
+## UI/UX Principles
+
+### Accessibility
+- Use semantic HTML
+- Include ARIA labels where needed
+- Ensure keyboard navigation works
+- Maintain color contrast ratios
+
+### Responsive Design
+- Mobile-first approach
+- Test on mobile, tablet, and desktop
+- Use Tailwind breakpoints: `sm:`, `md:`, `lg:`, `xl:`
+- Ensure touch targets are adequate
+
+### Loading States
+- Show skeletons for data loading
+- Use spinners for actions (refresh button)
+- Disable buttons during async operations
+- Provide feedback with toast notifications
+
+### Dark Mode
+- All components must support dark mode
+- Use `dark:` prefix for dark mode styles
+- Test in both light and dark modes
+- Use theme-aware colors from Tailwind
+
+## Testing Considerations
+
+### Manual Testing
+- Test without GitHub token (rate limited mode)
+- Test with GitHub token (full functionality)
+- Test with users having:
+  - < 100 followers (no pagination)
+  - > 100 followers (pagination)
+  - Many repositories (100+)
+- Test error states (invalid username, rate limit)
+
+### Edge Cases
+- No followers/following
+- No public repositories
+- Empty bio, location, etc.
+- Very long usernames or descriptions
+- Organizations vs. Users
+
+## Common Patterns
+
+### Fetching Data
+```typescript
+const [data, setData] = useState<Type[]>([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const result = await fetchFromAPI();
+      setData(result);
+      toast.success('Data loaded');
+    } catch (error) {
+      toast.error('Failed to load data');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  fetchData();
+}, [dependency]);
+```
+
+### Conditional Rendering
+```typescript
+if (loading) return <Skeleton />;
+if (error) return <ErrorState />;
+if (!data.length) return <EmptyState />;
+return <DataDisplay data={data} />;
+```
+
+### Animations
+```typescript
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+>
+  {children}
+</motion.div>
+```
+
+## Environment Variables
+
+### Development
+- `.env.local` - Local environment variables (gitignored)
+- `.env.example` - Template for required variables
+
+### Required Variables
+- `NEXT_PUBLIC_GITHUB_TOKEN` (optional) - GitHub Personal Access Token
+
+## Git Workflow
+
+### Commits
+- Use conventional commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`
+- Write clear commit messages
+- Keep commits focused and atomic
+
+### Branches
+- `main` - Production-ready code
+- Feature branches for new features
+- Bug fix branches for fixes
+
+## Documentation
+
+### Code Comments
+- Use JSDoc for functions:
+```typescript
+/**
+ * Fetch all followers for a user with pagination
+ * @param username - GitHub username
+ * @returns Array of all followers
+ */
+```
+- Comment complex logic
+- Avoid obvious comments
+
+### README Updates
+- Update README when adding features
+- Keep installation instructions current
+- Update screenshots if UI changes significantly
+
+## Dependencies
+
+### Adding New Dependencies
+- Justify the need
+- Check bundle size impact
+- Prefer lighter alternatives
+- Document in README if user-facing
+
+### Updating Dependencies
+- Test thoroughly after updates
+- Check for breaking changes
+- Update lock file
+
+## Deployment
+
+### Pre-deployment Checklist
+- [ ] Run `npm run build` successfully
+- [ ] Test production build locally (`npm run start`)
+- [ ] Check for console errors/warnings
+- [ ] Test with and without GitHub token
+- [ ] Verify environment variables are set
+- [ ] Test dark mode
+- [ ] Test responsive design
+
+### Vercel Deployment
+- Auto-deploys from `main` branch
+- Preview deployments for PRs
+- Environment variables in Vercel dashboard
+
+## Common Pitfalls to Avoid
+
+1. **Don't use `any` type** - Use proper types from `types/github.ts`
+2. **Don't hardcode API endpoints** - Use constants from `github-api.ts`
+3. **Don't forget loading states** - Always show feedback during async operations
+4. **Don't skip error handling** - Always wrap API calls in try-catch
+5. **Don't commit `.env.local`** - Keep tokens private
+6. **Don't forget dark mode** - Test all new components in dark mode
+7. **Don't ignore TypeScript errors** - Fix them, don't suppress
+8. **Don't fetch data in render** - Use `useEffect` or server components
+
+## When in Doubt
+
+- Check existing components for patterns
+- Refer to `ARCHITECTURE.md` for structure
+- Follow shadcn/ui conventions for components
+- Ask questions in comments/PRs
+- Keep it simple and maintainable
+
+---
+
+This project prioritizes: **Type Safety**, **User Experience**, **Code Readability**, and **Maintainability**
+
