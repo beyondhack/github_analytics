@@ -93,14 +93,16 @@ async function fetchGitHubAPI(endpoint: string): Promise<any> {
  * @param endpoint - GitHub API endpoint
  * @param perPage - Number of items per page (default: 100)
  * @param maxItems - Optional maximum number of items to fetch. If provided, stops fetching when reached
+ * @param startPage - Optional page number to start from (default: 1)
  */
 async function fetchPaginatedData<T>(
   endpoint: string,
   perPage: number = 100,
-  maxItems?: number
+  maxItems?: number,
+  startPage: number = 1
 ): Promise<T[]> {
   const allData: T[] = [];
-  let page = 1;
+  let page = startPage;
   let hasMore = true;
 
   while (hasMore) {
@@ -168,18 +170,20 @@ export async function fetchUserRepositories(username: string): Promise<Repositor
  * Fetch followers for a user with pagination
  * @param username - GitHub username
  * @param maxItems - Optional maximum number of followers to fetch. If not provided, fetches all followers
+ * @param startPage - Optional page number to start from (default: 1)
  */
-export async function fetchUserFollowers(username: string, maxItems?: number): Promise<GitHubFollower[]> {
-  return fetchPaginatedData<GitHubFollower>(`/users/${username}/followers`, 100, maxItems);
+export async function fetchUserFollowers(username: string, maxItems?: number, startPage: number = 1): Promise<GitHubFollower[]> {
+  return fetchPaginatedData<GitHubFollower>(`/users/${username}/followers`, 100, maxItems, startPage);
 }
 
 /**
  * Fetch following for a user with pagination
  * @param username - GitHub username
  * @param maxItems - Optional maximum number of users being followed to fetch. If not provided, fetches all following
+ * @param startPage - Optional page number to start from (default: 1)
  */
-export async function fetchUserFollowing(username: string, maxItems?: number): Promise<GitHubFollower[]> {
-  return fetchPaginatedData<GitHubFollower>(`/users/${username}/following`, 100, maxItems);
+export async function fetchUserFollowing(username: string, maxItems?: number, startPage: number = 1): Promise<GitHubFollower[]> {
+  return fetchPaginatedData<GitHubFollower>(`/users/${username}/following`, 100, maxItems, startPage);
 }
 
 /**

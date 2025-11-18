@@ -5,6 +5,16 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { UserProfile } from '@/components/user-profile';
 import { RepositoryAnalytics } from '@/components/repository-analytics';
 import { FollowerInsights } from '@/components/follower-insights';
@@ -31,7 +41,11 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const [following, setFollowing] = useState<GitHubFollower[]>([]);
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState({ followers: false, following: false });
   const [showTokenBanner, setShowTokenBanner] = useState(false);
+  const [showRefreshDialog, setShowRefreshDialog] = useState(false);
+  const [currentFollowersPage, setCurrentFollowersPage] = useState(1);
+  const [currentFollowingPage, setCurrentFollowingPage] = useState(1);
   const { user: authUser } = useAuth();
 
   useEffect(() => {
@@ -68,6 +82,10 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         setFollowers(followersData);
         setFollowing(followingData);
         setRateLimit(rateLimitData);
+        
+        // Reset page counters
+        setCurrentFollowersPage(shouldLimitFollowers ? Math.ceil(followersData.length / 100) : 1);
+        setCurrentFollowingPage(shouldLimitFollowing ? Math.ceil(followingData.length / 100) : 1);
 
         // Show success message with counts
         const followersMsg = shouldLimitFollowers 
@@ -90,8 +108,18 @@ export function Dashboard({ user, onReset }: DashboardProps) {
     fetchData();
   }, [user.login, authUser]);
 
+  const handleRefreshClick = () => {
+    const shouldShowDialog = user.followers > MAX_FOLLOWERS_TO_LOAD || user.following > MAX_FOLLOWERS_TO_LOAD;
+    if (shouldShowDialog) {
+      setShowRefreshDialog(true);
+    } else {
+      refreshData();
+    }
+  };
+
   const refreshData = async () => {
     setLoading(true);
+    setShowRefreshDialog(false);
     try {
       // Use same limits as initial fetch
       const shouldLimitFollowers = user.followers > MAX_FOLLOWERS_TO_LOAD;
@@ -108,11 +136,80 @@ export function Dashboard({ user, onReset }: DashboardProps) {
       setFollowers(followersData);
       setFollowing(followingData);
       setRateLimit(rateLimitData);
+      
+      // Reset page counters
+      setCurrentFollowersPage(shouldLimitFollowers ? Math.ceil(followersData.length / 100) : 1);
+      setCurrentFollowingPage(shouldLimitFollowing ? Math.ceil(followingData.length / 100) : 1);
+      
       toast.success('Data refreshed successfully');
     } catch (error) {
       toast.error('Failed to refresh data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMoreFollowers = async () => {
+    if (loadingMore.followers || followers.length >= user.followers) return;
+    
+    setLoadingMore(prev => ({ ...prev, followers: true }));
+    try {
+      // Calculate next page: if we have 500 items (5 pages), next page is 6
+      const itemsPerPage = 100;
+      const nextPage = Math.floor(followers.length / itemsPerPage) + 1;
+      const additionalData = await fetchUserFollowers(
+        user.login,
+        MAX_FOLLOWERS_TO_LOAD,
+        nextPage
+      );
+      
+      if (additionalData.length > 0) {
+        setFollowers(prev => {
+          const newLength = prev.length + additionalData.length;
+          setCurrentFollowersPage(Math.floor(newLength / itemsPerPage));
+          return [...prev, ...additionalData];
+        });
+        toast.success(`Loaded ${additionalData.length} more followers`);
+      } else {
+        toast.info('No more followers to load');
+      }
+    } catch (error) {
+      toast.error('Failed to load more followers');
+      console.error('Load more followers error:', error);
+    } finally {
+      setLoadingMore(prev => ({ ...prev, followers: false }));
+    }
+  };
+
+  const loadMoreFollowing = async () => {
+    if (loadingMore.following || following.length >= user.following) return;
+    
+    setLoadingMore(prev => ({ ...prev, following: true }));
+    try {
+      // Calculate next page: if we have 500 items (5 pages), next page is 6
+      const itemsPerPage = 100;
+      const nextPage = Math.floor(following.length / itemsPerPage) + 1;
+      const additionalData = await fetchUserFollowing(
+        user.login,
+        MAX_FOLLOWERS_TO_LOAD,
+        nextPage
+      );
+      
+      if (additionalData.length > 0) {
+        setFollowing(prev => {
+          const newLength = prev.length + additionalData.length;
+          setCurrentFollowingPage(Math.floor(newLength / itemsPerPage));
+          return [...prev, ...additionalData];
+        });
+        toast.success(`Loaded ${additionalData.length} more following`);
+      } else {
+        toast.info('No more following to load');
+      }
+    } catch (error) {
+      toast.error('Failed to load more following');
+      console.error('Load more following error:', error);
+    } finally {
+      setLoadingMore(prev => ({ ...prev, following: false }));
     }
   };
 
@@ -138,7 +235,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
           <RateLimitStatus rateLimit={rateLimit} />
           <Button
             variant="outline"
-            onClick={refreshData}
+            onClick={handleRefreshClick}
             disabled={loading}
             className="flex items-center space-x-2"
           >
@@ -174,6 +271,9 @@ export function Dashboard({ user, onReset }: DashboardProps) {
             totalFollowers={user.followers}
             totalFollowing={user.following}
             isLimited={user.followers > MAX_FOLLOWERS_TO_LOAD || user.following > MAX_FOLLOWERS_TO_LOAD}
+            onLoadMoreFollowers={loadMoreFollowers}
+            onLoadMoreFollowing={loadMoreFollowing}
+            loadingMore={loadingMore}
           />
         </TabsContent>
 
@@ -188,6 +288,25 @@ export function Dashboard({ user, onReset }: DashboardProps) {
           <SearchFeatures />
         </TabsContent>
       </Tabs>
+
+      {/* Refresh Confirmation Dialog */}
+      <AlertDialog open={showRefreshDialog} onOpenChange={setShowRefreshDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Refresh Data from Beginning?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This profile has a large number of followers or following. Refreshing will reload all data from the beginning, 
+              which may take some time and use API rate limits. The current loaded data will be replaced.
+              <br /><br />
+              Would you like to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={refreshData}>Refresh</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

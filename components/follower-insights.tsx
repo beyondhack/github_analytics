@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Users, UserMinus, UserPlus, ExternalLink, Search, AlertCircle } from 'lucide-react';
+import { Users, UserMinus, UserPlus, ExternalLink, Search, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -18,6 +19,9 @@ interface FollowerInsightsProps {
   totalFollowers: number;
   totalFollowing: number;
   isLimited: boolean;
+  onLoadMoreFollowers?: () => void;
+  onLoadMoreFollowing?: () => void;
+  loadingMore?: { followers: boolean; following: boolean };
 }
 
 export function FollowerInsights({ 
@@ -26,7 +30,10 @@ export function FollowerInsights({
   loading, 
   totalFollowers, 
   totalFollowing, 
-  isLimited 
+  isLimited,
+  onLoadMoreFollowers,
+  onLoadMoreFollowing,
+  loadingMore = { followers: false, following: false }
 }: FollowerInsightsProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -183,7 +190,7 @@ export function FollowerInsights({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Followers Loaded</p>
                 <p className="text-2xl font-bold">
                   {followers.length.toLocaleString()}
@@ -194,13 +201,31 @@ export function FollowerInsights({
                   )}
                 </p>
               </div>
+              {onLoadMoreFollowers && isLimited && totalFollowers > followers.length && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onLoadMoreFollowers}
+                  disabled={loadingMore.followers}
+                  className="ml-4"
+                >
+                  {loadingMore.followers ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Following Loaded</p>
                 <p className="text-2xl font-bold">
                   {following.length.toLocaleString()}
@@ -211,6 +236,24 @@ export function FollowerInsights({
                   )}
                 </p>
               </div>
+              {onLoadMoreFollowing && isLimited && totalFollowing > following.length && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onLoadMoreFollowing}
+                  disabled={loadingMore.following}
+                  className="ml-4"
+                >
+                  {loadingMore.following ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
