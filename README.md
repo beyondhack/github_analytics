@@ -24,7 +24,8 @@
 - **Real-time Data**: Fresh data from GitHub API with pagination support
 - **Rate Limit Monitor**: Track your API usage in real-time
 - **GitHub Search**: Search for users, repositories, commits, issues, and topics
-- **No Login Required**: Analyze any public GitHub profile
+- **GitHub OAuth**: Easy login with GitHub account for higher rate limits
+- **No Login Required**: Analyze any public GitHub profile (with limited rate limits)
 
 ## 🛠️ Tech Stack
 
@@ -55,17 +56,13 @@
    npm install
    ```
 
-3. **Configure GitHub Token (Optional but Recommended)**
+3. **Configure GitHub Authentication (Recommended)**
    
-   Create a `.env.local` file in the project root:
-   ```bash
-   cp .env.example .env.local
-   ```
+   See the [GitHub Authentication Setup](#-github-authentication-setup) section below for detailed instructions.
    
-   Add your GitHub Personal Access Token:
-   ```env
-   NEXT_PUBLIC_GITHUB_TOKEN=your_github_token_here
-   ```
+   You can either:
+   - **Use OAuth** (recommended): Users login with their GitHub account
+   - **Use a shared token**: Set up a single token for all users
 
 4. **Start the development server**
    ```bash
@@ -76,11 +73,49 @@
    
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 🔑 GitHub Token Setup (Optional)
+## 🔑 GitHub Authentication Setup
 
-Without a token, you're limited to **60 API requests per hour**. With a token, you get **5,000 requests per hour** and can fetch unlimited followers/following.
+Without authentication, you're limited to **60 API requests per hour**. With authentication, you get **5,000 requests per hour** and can fetch unlimited followers/following.
 
-### How to Create a GitHub Token:
+### Option 1: GitHub OAuth (Recommended - Easiest for Users)
+
+This allows users to login with their GitHub account directly in the app. Each user gets their own rate limit.
+
+#### Setup Steps:
+
+1. **Create a GitHub OAuth App**
+   - Go to [GitHub Settings > Developer settings > OAuth Apps](https://github.com/settings/developers)
+   - Click "New OAuth App"
+   - Fill in the form:
+     - **Application name**: GitHub Analytics Dashboard (or your preferred name)
+     - **Homepage URL**: `http://localhost:3000` (for development) or your production URL
+     - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github` (for development) or `https://your-domain.com/api/auth/callback/github` (for production)
+   - Click "Register application"
+   - Copy the **Client ID** and generate a **Client Secret**
+
+2. **Configure Environment Variables**
+   
+   Create a `.env.local` file in the project root:
+   ```env
+   # GitHub OAuth Configuration
+   GITHUB_CLIENT_ID=your_client_id_here
+   GITHUB_CLIENT_SECRET=your_client_secret_here
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   
+   # Optional: Shared token as fallback (for users who don't login)
+   NEXT_PUBLIC_GITHUB_TOKEN=your_github_token_here
+   ```
+
+3. **Restart your development server**
+
+**For Production:**
+- Update the OAuth App's callback URL to your production domain
+- Set `NEXT_PUBLIC_APP_URL` to your production URL
+- Add the environment variables to your hosting platform (Vercel, etc.)
+
+### Option 2: Manual Token Setup (Alternative)
+
+If you prefer not to use OAuth, you can set up a shared token:
 
 1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
 2. Click "Generate new token (classic)"
@@ -90,7 +125,7 @@ Without a token, you're limited to **60 API requests per hour**. With a token, y
    - `read:user` - Read user profile data
 5. Click "Generate token"
 6. Copy the token immediately (you won't see it again!)
-7. Paste it in your `.env.local` file:
+7. Add it to your `.env.local` file:
    ```env
    NEXT_PUBLIC_GITHUB_TOKEN=ghp_your_token_here
    ```
@@ -98,8 +133,9 @@ Without a token, you're limited to **60 API requests per hour**. With a token, y
 
 **⚠️ Important**: 
 - Never commit your `.env.local` file to git (it's already in `.gitignore`)
-- Keep your token private and secure
-- The token only needs read access to public data
+- Keep your tokens and secrets private and secure
+- The tokens only need read access to public data
+- OAuth is recommended as it distributes rate limits across users
 
 ## 📖 Usage
 
@@ -127,21 +163,34 @@ Use the Search tab to find:
 ```
 github-analytics/
 ├── app/                      # Next.js App Router
-│   ├── layout.tsx           # Root layout with theme provider
+│   ├── api/                  # API routes
+│   │   └── auth/            # Authentication routes
+│   │       ├── github/      # OAuth initiation
+│   │       ├── callback/    # OAuth callback handler
+│   │       ├── logout/      # Logout endpoint
+│   │       ├── session/     # Session management
+│   │       └── token/       # Token retrieval
+│   ├── layout.tsx           # Root layout with providers
 │   ├── page.tsx             # Main page component
 │   └── globals.css          # Global styles
 ├── components/              # React components
 │   ├── ui/                  # shadcn/ui components
+│   ├── auth-button.tsx      # Login/logout button
 │   ├── dashboard.tsx        # Main dashboard view
 │   ├── follower-insights.tsx
 │   ├── repository-analytics.tsx
 │   ├── language-stats.tsx
 │   └── ...                  # Other components
+├── contexts/                # React contexts
+│   └── auth-context.tsx     # Authentication context
+├── providers/               # React providers
+│   └── auth-provider.tsx    # Authentication provider
 ├── lib/                     # Utility libraries
 │   ├── github-api.ts        # GitHub API integration
 │   └── utils.ts             # Helper functions
 ├── types/                   # TypeScript type definitions
-│   └── github.ts            # GitHub API types
+│   ├── github.ts            # GitHub API types
+│   └── auth.ts              # Authentication types
 └── public/                  # Static assets
 ```
 
@@ -167,10 +216,13 @@ npm run lint         # Run ESLint
 
 1. Push your code to GitHub
 2. Import your repository on [Vercel](https://vercel.com)
-3. Add your environment variable:
-   - Key: `NEXT_PUBLIC_GITHUB_TOKEN`
-   - Value: Your GitHub token
-4. Deploy!
+3. Add your environment variables:
+   - `GITHUB_CLIENT_ID` - Your GitHub OAuth App Client ID
+   - `GITHUB_CLIENT_SECRET` - Your GitHub OAuth App Client Secret
+   - `NEXT_PUBLIC_APP_URL` - Your production URL (e.g., `https://your-app.vercel.app`)
+   - `NEXT_PUBLIC_GITHUB_TOKEN` (optional) - Shared token as fallback
+4. Update your GitHub OAuth App's callback URL to: `https://your-app.vercel.app/api/auth/callback/github`
+5. Deploy!
 
 ### Deploy to Other Platforms
 
@@ -182,10 +234,11 @@ This is a standard Next.js application and can be deployed to:
 
 ## 🔒 Privacy & Security
 
-- **No Data Storage**: This application doesn't store any user data
-- **Client-Side Only**: All API calls are made from the browser
+- **No Data Storage**: This application doesn't store any user data permanently
+- **Secure Token Storage**: OAuth tokens are stored in httpOnly cookies (server-side only)
 - **Read-Only Access**: Only reads public GitHub data
-- **Token Security**: Your GitHub token is stored locally and never sent to any server except GitHub
+- **Token Security**: Tokens are never exposed to client-side JavaScript (OAuth) or stored securely (manual tokens)
+- **CSRF Protection**: OAuth flow includes state parameter for CSRF protection
 
 ## 📊 API Rate Limits
 

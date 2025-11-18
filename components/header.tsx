@@ -3,6 +3,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
+import { AuthButton } from '@/components/auth-button';
 import Image from 'next/image';
 
 export function Header() {
@@ -25,6 +26,8 @@ export function Header() {
         </div>
         
         <div className="flex items-center space-x-4">
+          <AuthButton />
+          
           <Button
             variant="ghost"
             size="icon"

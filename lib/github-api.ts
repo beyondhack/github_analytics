@@ -2,14 +2,51 @@ import { GitHubUser, Repository, GitHubFollower, RateLimit } from '@/types/githu
 
 const GITHUB_API_BASE = 'https://api.github.com';
 
-// Get GitHub token from environment (optional)
+// Cache for user token to avoid repeated API calls
+let userTokenCache: string | null | undefined = undefined;
+let tokenCacheTime: number = 0;
+const TOKEN_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get user's GitHub token from authenticated session
+ * Falls back to shared token if user is not authenticated
+ */
+async function getUserToken(): Promise<string | null> {
+  // Check cache first
+  if (userTokenCache !== undefined && Date.now() - tokenCacheTime < TOKEN_CACHE_DURATION) {
+    return userTokenCache || null;
+  }
+
+  try {
+    // Try to get user's token from API
+    const response = await fetch('/api/auth/token');
+    const data = await response.json();
+    
+    if (data.token) {
+      userTokenCache = data.token;
+      tokenCacheTime = Date.now();
+      return data.token;
+    }
+  } catch (error) {
+    console.error('Failed to fetch user token:', error);
+  }
+
+  // Fallback to shared token
+  const sharedToken = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+  userTokenCache = sharedToken || null;
+  tokenCacheTime = Date.now();
+  return sharedToken || null;
+}
+
+// Get GitHub token from environment (optional, fallback only)
 const getGitHubToken = (): string | undefined => {
   return process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 };
 
-// Check if token is configured
-export const hasGitHubToken = (): boolean => {
-  return !!getGitHubToken();
+// Check if any token is configured (user token or shared token)
+export const hasGitHubToken = async (): Promise<boolean> => {
+  const token = await getUserToken();
+  return !!token;
 };
 
 class GitHubAPIError extends Error {
@@ -21,6 +58,7 @@ class GitHubAPIError extends Error {
 
 /**
  * Base fetch function for GitHub API with optional authentication
+ * Uses user's authenticated token if available, falls back to shared token
  */
 async function fetchGitHubAPI(endpoint: string): Promise<any> {
   const headers: HeadersInit = {
@@ -28,8 +66,8 @@ async function fetchGitHubAPI(endpoint: string): Promise<any> {
     'User-Agent': 'GitHub-Analytics-Dashboard',
   };
 
-  // Add authorization header if token is available
-  const token = getGitHubToken();
+  // Get token (user token takes priority over shared token)
+  const token = await getUserToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -41,7 +79,7 @@ async function fetchGitHubAPI(endpoint: string): Promise<any> {
       throw new GitHubAPIError('User not found', 404);
     }
     if (response.status === 403) {
-      throw new GitHubAPIError('API rate limit exceeded. Consider adding a GitHub token for higher limits.', 403);
+      throw new GitHubAPIError('API rate limit exceeded. Please login with GitHub or add a GitHub token for higher limits.', 403);
     }
     throw new GitHubAPIError(`GitHub API error: ${response.statusText}`, response.status);
   }
@@ -63,20 +101,37 @@ async function fetchPaginatedData<T>(
 
   while (hasMore) {
     const separator = endpoint.includes('?') ? '&' : '?';
-    const data = await fetchGitHubAPI(
-      `${endpoint}${separator}per_page=${perPage}&page=${page}`
-    );
+    try {
+      const data = await fetchGitHubAPI(
+        `${endpoint}${separator}per_page=${perPage}&page=${page}`
+      );
 
-    if (Array.isArray(data) && data.length > 0) {
-      allData.push(...data);
-      hasMore = data.length === perPage; // Continue if we got a full page
-      page++;
-    } else {
-      hasMore = false;
+      if (Array.isArray(data) && data.length > 0) {
+        allData.push(...data);
+        hasMore = data.length === perPage; // Continue if we got a full page
+        page++;
+      } else {
+        hasMore = false;
+      }
+    } catch (error) {
+      // If we get a rate limit error and have some data, return what we have
+      if (error instanceof GitHubAPIError && error.status === 403 && allData.length > 0) {
+        console.warn('Rate limit reached, returning partial data');
+        break;
+      }
+      throw error;
     }
   }
 
   return allData;
+}
+
+/**
+ * Clear token cache (useful after login/logout)
+ */
+export function clearTokenCache(): void {
+  userTokenCache = undefined;
+  tokenCacheTime = 0;
 }
 
 export async function fetchGitHubUser(username: string): Promise<GitHubUser> {

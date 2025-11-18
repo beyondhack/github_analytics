@@ -14,6 +14,7 @@ import { SearchFeatures } from '@/components/search-features';
 import { GitHubTokenBanner } from '@/components/github-token-banner';
 import { GitHubUser, Repository, GitHubFollower } from '@/types/github';
 import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit, hasGitHubToken } from '@/lib/github-api';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 
 interface DashboardProps {
@@ -28,10 +29,16 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showTokenBanner, setShowTokenBanner] = useState(false);
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
-    // Check if token is configured
-    setShowTokenBanner(!hasGitHubToken());
+    // Check if token is configured (async)
+    const checkToken = async () => {
+      const hasToken = await hasGitHubToken();
+      // Show banner if no token and user is not authenticated
+      setShowTokenBanner(!hasToken && !authUser);
+    };
+    checkToken();
 
     const fetchData = async () => {
       setLoading(true);
@@ -65,7 +72,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
     };
 
     fetchData();
-  }, [user.login]);
+  }, [user.login, authUser]);
 
   const refreshData = async () => {
     setLoading(true);
