@@ -2,21 +2,32 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Users, UserMinus, UserPlus, ExternalLink, Search } from 'lucide-react';
+import { Users, UserMinus, UserPlus, ExternalLink, Search, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { GitHubFollower } from '@/types/github';
 
 interface FollowerInsightsProps {
   followers: GitHubFollower[];
   following: GitHubFollower[];
   loading: boolean;
+  totalFollowers: number;
+  totalFollowing: number;
+  isLimited: boolean;
 }
 
-export function FollowerInsights({ followers, following, loading }: FollowerInsightsProps) {
+export function FollowerInsights({ 
+  followers, 
+  following, 
+  loading, 
+  totalFollowers, 
+  totalFollowing, 
+  isLimited 
+}: FollowerInsightsProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const insights = useMemo(() => {
@@ -67,16 +78,27 @@ export function FollowerInsights({ followers, following, loading }: FollowerInsi
     );
   }
 
-  const StatCard = ({ title, count, icon: Icon, color }: any) => (
+  const StatCard = ({ title, count, icon: Icon, color, isApproximate }: { 
+    title: string; 
+    count: number; 
+    icon: any; 
+    color: string;
+    isApproximate?: boolean;
+  }) => (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-lg ${color}`}>
             <Icon className="w-5 h-5 text-white" />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="text-2xl font-bold">{formatCount(count)}</p>
-            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-sm text-muted-foreground">
+              {title}
+              {isApproximate && (
+                <span className="ml-1 text-xs text-orange-600 dark:text-orange-400">(approx.)</span>
+              )}
+            </p>
           </div>
         </div>
       </CardContent>
@@ -141,6 +163,59 @@ export function FollowerInsights({ followers, following, loading }: FollowerInsi
 
   return (
     <div className="space-y-6">
+      {/* Warning Banner for Limited Data */}
+      {isLimited && (
+        <Alert className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/50">
+          <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+          <AlertTitle className="text-orange-800 dark:text-orange-300">
+            Limited Data - Approximate Insights
+          </AlertTitle>
+          <AlertDescription className="text-orange-700 dark:text-orange-400">
+            For better performance, only the first {followers.length.toLocaleString()} of {totalFollowers.toLocaleString()} followers 
+            and {following.length.toLocaleString()} of {totalFollowing.toLocaleString()} following have been loaded. 
+            The calculations for "don't follow back", "don't follow you", and "mutual follows" are approximate based on this limited data.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Data Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Followers Loaded</p>
+                <p className="text-2xl font-bold">
+                  {followers.length.toLocaleString()}
+                  {isLimited && totalFollowers > followers.length && (
+                    <span className="text-lg font-normal text-muted-foreground">
+                      {' '}/ {totalFollowers.toLocaleString()}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Following Loaded</p>
+                <p className="text-2xl font-bold">
+                  {following.length.toLocaleString()}
+                  {isLimited && totalFollowing > following.length && (
+                    <span className="text-lg font-normal text-muted-foreground">
+                      {' '}/ {totalFollowing.toLocaleString()}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
@@ -148,18 +223,21 @@ export function FollowerInsights({ followers, following, loading }: FollowerInsi
           count={insights.notFollowingBack.length}
           icon={UserMinus}
           color="bg-red-500"
+          isApproximate={isLimited}
         />
         <StatCard
           title="Don't Follow You"
           count={insights.notFollowedBack.length}
           icon={UserPlus}
           color="bg-orange-500"
+          isApproximate={isLimited}
         />
         <StatCard
           title="Mutual Follows"
           count={insights.mutualFollows.length}
           icon={Users}
           color="bg-green-500"
+          isApproximate={isLimited}
         />
       </div>
 

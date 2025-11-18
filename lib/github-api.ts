@@ -90,10 +90,14 @@ async function fetchGitHubAPI(endpoint: string): Promise<any> {
 /**
  * Fetch paginated data from GitHub API
  * Automatically fetches all pages until no more data is available
+ * @param endpoint - GitHub API endpoint
+ * @param perPage - Number of items per page (default: 100)
+ * @param maxItems - Optional maximum number of items to fetch. If provided, stops fetching when reached
  */
 async function fetchPaginatedData<T>(
   endpoint: string,
-  perPage: number = 100
+  perPage: number = 100,
+  maxItems?: number
 ): Promise<T[]> {
   const allData: T[] = [];
   let page = 1;
@@ -107,7 +111,21 @@ async function fetchPaginatedData<T>(
       );
 
       if (Array.isArray(data) && data.length > 0) {
-        allData.push(...data);
+        // If maxItems is set, only add items up to the limit
+        if (maxItems !== undefined) {
+          const remaining = maxItems - allData.length;
+          if (remaining > 0) {
+            allData.push(...data.slice(0, remaining));
+          }
+          // Stop if we've reached the limit
+          if (allData.length >= maxItems) {
+            hasMore = false;
+            break;
+          }
+        } else {
+          allData.push(...data);
+        }
+        
         hasMore = data.length === perPage; // Continue if we got a full page
         page++;
       } else {
@@ -147,19 +165,21 @@ export async function fetchUserRepositories(username: string): Promise<Repositor
 }
 
 /**
- * Fetch all followers for a user with pagination
- * This will fetch ALL followers, not just the first 100
+ * Fetch followers for a user with pagination
+ * @param username - GitHub username
+ * @param maxItems - Optional maximum number of followers to fetch. If not provided, fetches all followers
  */
-export async function fetchUserFollowers(username: string): Promise<GitHubFollower[]> {
-  return fetchPaginatedData<GitHubFollower>(`/users/${username}/followers`);
+export async function fetchUserFollowers(username: string, maxItems?: number): Promise<GitHubFollower[]> {
+  return fetchPaginatedData<GitHubFollower>(`/users/${username}/followers`, 100, maxItems);
 }
 
 /**
- * Fetch all following for a user with pagination
- * This will fetch ALL users being followed, not just the first 100
+ * Fetch following for a user with pagination
+ * @param username - GitHub username
+ * @param maxItems - Optional maximum number of users being followed to fetch. If not provided, fetches all following
  */
-export async function fetchUserFollowing(username: string): Promise<GitHubFollower[]> {
-  return fetchPaginatedData<GitHubFollower>(`/users/${username}/following`);
+export async function fetchUserFollowing(username: string, maxItems?: number): Promise<GitHubFollower[]> {
+  return fetchPaginatedData<GitHubFollower>(`/users/${username}/following`, 100, maxItems);
 }
 
 /**

@@ -22,6 +22,9 @@ interface DashboardProps {
   onReset: () => void;
 }
 
+// Maximum number of followers/following to load initially for large profiles
+const MAX_FOLLOWERS_TO_LOAD = 500;
+
 export function Dashboard({ user, onReset }: DashboardProps) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [followers, setFollowers] = useState<GitHubFollower[]>([]);
@@ -43,15 +46,21 @@ export function Dashboard({ user, onReset }: DashboardProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Show a toast for large accounts about pagination
-        if (user.followers > 100 || user.following > 100) {
+        // Determine if we should limit followers/following based on profile size
+        const shouldLimitFollowers = user.followers > MAX_FOLLOWERS_TO_LOAD;
+        const shouldLimitFollowing = user.following > MAX_FOLLOWERS_TO_LOAD;
+        
+        // Show appropriate message based on whether we're limiting
+        if (shouldLimitFollowers || shouldLimitFollowing) {
+          toast.info(`Loading first ${MAX_FOLLOWERS_TO_LOAD} followers/following for faster performance. Insights will be approximate.`);
+        } else if (user.followers > 100 || user.following > 100) {
           toast.info('Fetching all data with pagination. This may take a moment...');
         }
 
         const [reposData, followersData, followingData, rateLimitData] = await Promise.all([
           fetchUserRepositories(user.login),
-          fetchUserFollowers(user.login),
-          fetchUserFollowing(user.login),
+          fetchUserFollowers(user.login, shouldLimitFollowers ? MAX_FOLLOWERS_TO_LOAD : undefined),
+          fetchUserFollowing(user.login, shouldLimitFollowing ? MAX_FOLLOWERS_TO_LOAD : undefined),
           fetchRateLimit()
         ]);
 
@@ -61,7 +70,14 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         setRateLimit(rateLimitData);
 
         // Show success message with counts
-        const message = `Loaded ${reposData.length} repositories, ${followersData.length} followers, ${followingData.length} following`;
+        const followersMsg = shouldLimitFollowers 
+          ? `${followersData.length} of ${user.followers.toLocaleString()} followers`
+          : `${followersData.length} followers`;
+        const followingMsg = shouldLimitFollowing
+          ? `${followingData.length} of ${user.following.toLocaleString()} following`
+          : `${followingData.length} following`;
+        
+        const message = `Loaded ${reposData.length} repositories, ${followersMsg}, ${followingMsg}`;
         toast.success(message);
       } catch (error) {
         toast.error('Failed to fetch some data');
@@ -77,10 +93,14 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const refreshData = async () => {
     setLoading(true);
     try {
+      // Use same limits as initial fetch
+      const shouldLimitFollowers = user.followers > MAX_FOLLOWERS_TO_LOAD;
+      const shouldLimitFollowing = user.following > MAX_FOLLOWERS_TO_LOAD;
+
       const [reposData, followersData, followingData, rateLimitData] = await Promise.all([
         fetchUserRepositories(user.login),
-        fetchUserFollowers(user.login),
-        fetchUserFollowing(user.login),
+        fetchUserFollowers(user.login, shouldLimitFollowers ? MAX_FOLLOWERS_TO_LOAD : undefined),
+        fetchUserFollowing(user.login, shouldLimitFollowing ? MAX_FOLLOWERS_TO_LOAD : undefined),
         fetchRateLimit()
       ]);
 
@@ -151,6 +171,9 @@ export function Dashboard({ user, onReset }: DashboardProps) {
             followers={followers}
             following={following}
             loading={loading}
+            totalFollowers={user.followers}
+            totalFollowing={user.following}
+            isLimited={user.followers > MAX_FOLLOWERS_TO_LOAD || user.following > MAX_FOLLOWERS_TO_LOAD}
           />
         </TabsContent>
 
