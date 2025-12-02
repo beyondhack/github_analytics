@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Repository } from '@/types/github';
@@ -29,25 +29,39 @@ export function LanguageStats({ repositories, loading }: LanguageStatsProps) {
       }
     });
 
-    const sortedLanguages = Object.entries(languageCounts)
+    // Sort by repository count (most repos first)
+    const sortedByRepoCount = Object.entries(languageRepos)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10);
 
-    const pieData = sortedLanguages.map(([language, size], index) => ({
+    const pieData = sortedByRepoCount.map(([language, count], index) => ({
       name: language,
-      value: languageRepos[language],
-      size,
+      value: count,
+      size: languageCounts[language],
       color: COLORS[index % COLORS.length]
     }));
 
-    const barData = sortedLanguages.map(([language, size], index) => ({
+    const barData = sortedByRepoCount.map(([language, count], index) => ({
       language,
-      repositories: languageRepos[language],
-      size: Math.round(size / 1024), // Convert to KB
+      repositories: count,
+      size: Math.round(languageCounts[language] / 1024), // Convert to KB
       color: COLORS[index % COLORS.length]
     }));
 
-    return { pieData, barData, totalLanguages: Object.keys(languageCounts).length };
+    // Find language with most repositories
+    const mostUsedLanguage = sortedByRepoCount[0]?.[0] || 'N/A';
+    
+    // Find language with largest total size
+    const largestBySize = Object.entries(languageCounts)
+      .sort(([, a], [, b]) => b - a)[0]?.[0] || 'N/A';
+
+    return { 
+      pieData, 
+      barData, 
+      totalLanguages: Object.keys(languageCounts).length,
+      mostUsedLanguage,
+      largestBySize
+    };
   }, [repositories]);
 
   if (loading) {
@@ -109,7 +123,7 @@ export function LanguageStats({ repositories, loading }: LanguageStatsProps) {
           <CardContent className="p-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-primary">
-                {languageData.pieData[0]?.name || 'N/A'}
+                {languageData.mostUsedLanguage}
               </p>
               <p className="text-sm text-muted-foreground">Most Used Language</p>
             </div>
@@ -139,22 +153,34 @@ export function LanguageStats({ repositories, loading }: LanguageStatsProps) {
               <CardTitle>Language Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={400}>
                 <PieChart>
                   <Pie
                     data={languageData.pieData}
                     cx="50%"
-                    cy="50%"
-                    outerRadius={100}
+                    cy="45%"
+                    outerRadius={85}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ percent }) => {
+                      // Only show percentage if it is greater than 3% to avoid overlap
+                      return percent > 0.03 ? `${(percent * 100).toFixed(0)}%` : '';
+                    }}
+                    labelLine={false}
                   >
                     {languageData.pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={60}
+                    formatter={(value, entry: any) => {
+                      const percent = ((entry.payload.value / languageData.pieData.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1);
+                      return `${value} (${percent}%)`;
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
