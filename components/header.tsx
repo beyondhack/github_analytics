@@ -17,13 +17,13 @@ export function Header() {
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 relative bg-white dark:bg-gray-800 rounded-lg p-0.5">
+          <div className="w-8 h-8 relative">
             <Image
               src="/statspet.png"
               alt="GitHub Analytics Logo"
               width={32}
               height={32}
-              className="rounded-lg w-full h-full object-contain"
+              className="rounded-lg dark:brightness-110 dark:contrast-110"
             />
           </div>
           <h1 className="text-xl font-bold bg-gradient-to-r from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent">

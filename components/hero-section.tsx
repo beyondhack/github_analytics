@@ -21,13 +21,13 @@ export function HeroSection() {
         className="space-y-6"
       >
         <div className="flex items-center justify-center space-x-4 mb-8">
-          <div className="w-16 h-16 relative bg-white dark:bg-gray-800 rounded-lg p-1">
+          <div className="w-16 h-16 relative">
             <Image
               src="/statspet.png"
               alt="GitHub Analytics Logo"
               width={64}
               height={64}
-              className="rounded-lg w-full h-full object-contain"
+              className="rounded-lg dark:brightness-110 dark:contrast-110"
             />
           </div>
           <div className="w-12 h-12 bg-gradient-to-br from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 rounded-xl flex items-center justify-center">
