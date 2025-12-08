@@ -1,30 +1,57 @@
-# GitHub Analytics Dashboard
+- **No Manual Token Setup**: Simplified authentication - no need to create personal access tokens
+- **Session Management**: Persistent login sessions with secure httpOnly cookies
+- **Automatic Rate Limit Boost**: Get 5,000 requests/hour when logged in (vs 60 without login)
 
-<div align="center">
-  <img src="/public/GitHub-Symbol.png" alt="GitHub Analytics" width="100" />
-  <p><strong>A powerful analytics dashboard for GitHub profiles with enhanced follower insights</strong></p>
-</div>
-
-## 🚀 Features
-
-### Follower Analytics
-- **Smart Follower Insights**: See who follows you back and who doesn't
-- **Mutual Connections**: Discover your mutual followers
-- **Follower Tracking**: Identify users you follow but don't follow you back
+### 👥 Follower Analytics
+- **Smart Follower Insights**: Analyze your follower relationships with three key categories:
+  - **Don't Follow Back**: Users who follow you but you don't follow them
+  - **Don't Follow You**: Users you follow but they don't follow you back
+  - **Mutual Follows**: Users with bidirectional following relationships
 - **Unlimited Followers**: View ALL followers and following users (not limited to 100)
+- **Load More Functionality**: Progressively load followers/following in batches of 100
+- **Real-time Search**: Filter followers and following by username
+- **Visual Statistics**: See follower counts with color-coded stat cards
 
-### Repository Analytics
-- **Comprehensive Stats**: View all your repositories with detailed metrics
-- **Smart Sorting**: Sort by stars, forks, creation date, or last update
-- **Search & Filter**: Quickly find specific repositories
-- **Language Insights**: Visualize your most-used programming languages
+### 📊 Repository Analytics
+- **Comprehensive Repository List**: View all repositories with detailed metrics:
+  - Star count, fork count, and watcher count
+  - Primary programming language
+  - Creation date and last update timestamp
+  - Repository description
+- **Advanced Sorting**: Sort repositories by:
+  - Stars (most to least)
+  - Forks (most to least)
+  - Creation date (newest/oldest)
+  - Last update (most/least recent)
+- **Search & Filter**: Quickly find specific repositories by name
+- **Direct Links**: Click to open any repository on GitHub
+- **Repository Stats**: Total count and aggregate statistics
 
-### Additional Features
-- **Beautiful UI**: Modern, responsive design with dark mode support
+### 📈 Language Statistics
+- **Visual Language Breakdown**: Interactive bar chart showing programming language distribution
+- **Language Metrics**: See the number of repositories per language
+- **Color-Coded Display**: Each language has a distinct color for easy identification
+- **Percentage Calculation**: View what percentage of your repos use each language
+
+### 🔍 GitHub Search
+- **Multi-Type Search**: Search across five different GitHub entity types:
+  - **Users**: Find GitHub users by username or name
+  - **Repositories**: Search repos by name or description
+  - **Commits**: Find commits across GitHub
+  - **Issues**: Search for issues and pull requests
+  - **Topics**: Discover repositories by topic tags
+- **Rich Results**: Display detailed information for each result type
+- **Pagination**: View up to 20 results per search
+- **Result Count**: See total number of matches found
+
+### 🎨 User Experience
+- **Beautiful UI**: Modern, responsive design with smooth animations
+- **Dark Mode Support**: Automatic theme switching with next-themes
 - **Real-time Data**: Fresh data from GitHub API with pagination support
-- **Rate Limit Monitor**: Track your API usage in real-time
-- **GitHub Search**: Search for users, repositories, commits, issues, and topics
-- **GitHub OAuth**: Easy login with GitHub account for higher rate limits
+- **Rate Limit Monitor**: Track your API usage in real-time with visual indicator
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Loading States**: Skeleton loaders for smooth user experience
+- **Toast Notifications**: User-friendly feedback for all actions
 - **No Login Required**: Analyze any public GitHub profile (with limited rate limits)
 
 ## 🛠️ Tech Stack
@@ -58,11 +85,7 @@
 
 3. **Configure GitHub Authentication (Recommended)**
    
-   See the [GitHub Authentication Setup](#-github-authentication-setup) section below for detailed instructions.
-   
-   You can either:
-   - **Use OAuth** (recommended): Users login with their GitHub account
-   - **Use a shared token**: Set up a single token for all users
+   See the [GitHub Authentication Setup](#-github-authentication-setup) section below for detailed instructions on setting up GitHub OAuth.
 
 4. **Start the development server**
    ```bash
@@ -75,11 +98,11 @@
 
 ## 🔑 GitHub Authentication Setup
 
-Without authentication, you're limited to **60 API requests per hour**. With authentication, you get **5,000 requests per hour** and can fetch unlimited followers/following.
+Without authentication, you're limited to **60 API requests per hour**. With GitHub OAuth login, users get **5,000 requests per hour** and can fetch unlimited followers/following.
 
-### Option 1: GitHub OAuth (Recommended - Easiest for Users)
+### GitHub OAuth Setup
 
-This allows users to login with their GitHub account directly in the app. Each user gets their own rate limit.
+This allows users to login with their GitHub account directly in the app. Each user gets their own rate limit and personalized experience.
 
 #### Setup Steps:
 
@@ -97,66 +120,91 @@ This allows users to login with their GitHub account directly in the app. Each u
    
    Create a `.env.local` file in the project root:
    ```env
-   # GitHub OAuth Configuration
+   # GitHub OAuth Configuration (Required)
    GITHUB_CLIENT_ID=your_client_id_here
    GITHUB_CLIENT_SECRET=your_client_secret_here
    NEXT_PUBLIC_APP_URL=http://localhost:3000
-   
-   # Optional: Shared token as fallback (for users who don't login)
-   NEXT_PUBLIC_GITHUB_TOKEN=your_github_token_here
    ```
 
 3. **Restart your development server**
+   ```bash
+   npm run dev
+   ```
 
 **For Production:**
 - Update the OAuth App's callback URL to your production domain
 - Set `NEXT_PUBLIC_APP_URL` to your production URL
 - Add the environment variables to your hosting platform (Vercel, etc.)
 
-### Option 2: Manual Token Setup (Alternative)
-
-If you prefer not to use OAuth, you can set up a shared token:
-
-1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
-2. Click "Generate new token (classic)"
-3. Give it a descriptive name (e.g., "GitHub Analytics Dashboard")
-4. Select the following scopes:
-   - `public_repo` - Access public repositories
-   - `read:user` - Read user profile data
-5. Click "Generate token"
-6. Copy the token immediately (you won't see it again!)
-7. Add it to your `.env.local` file:
-   ```env
-   NEXT_PUBLIC_GITHUB_TOKEN=ghp_your_token_here
-   ```
-8. Restart your development server
-
 **⚠️ Important**: 
 - Never commit your `.env.local` file to git (it's already in `.gitignore`)
-- Keep your tokens and secrets private and secure
-- The tokens only need read access to public data
-- OAuth is recommended as it distributes rate limits across users
+- Keep your Client ID and Client Secret private and secure
+- The OAuth app only needs access to public data (no special scopes required)
+- Users will be prompted to authorize the app when they first login
 
 ## 📖 Usage
 
+### Logging In (Recommended)
+
+1. **Click "Login with GitHub"**: Click the login button in the top-right corner or in the banner
+2. **Authorize the App**: You'll be redirected to GitHub to authorize the application
+3. **Automatic Redirect**: After authorization, you'll be redirected back to the dashboard
+4. **Enjoy Higher Limits**: You now have 5,000 requests/hour instead of 60
+
 ### Analyzing a GitHub Profile
 
-1. **Enter a Username**: Type any GitHub username in the search box
+1. **Enter a Username**: Type any GitHub username in the search box on the home page
 2. **Click "Analyze Profile"**: Or use "I'm Feeling Lucky" for a random famous developer
-3. **View Insights**: Explore tabs for repositories, followers, languages, and search
+3. **View Dashboard**: Explore the comprehensive analytics dashboard with multiple tabs
 
-### Understanding Follower Insights
+### Using Follower Insights
+
+The Followers tab shows three key categories:
 
 - **Don't Follow Back**: Users who follow you but you don't follow them
+  - Great for finding potential connections to follow back
 - **Don't Follow You**: Users you follow but they don't follow you back
+  - Helpful for managing your following list
 - **Mutual Follows**: Users with bidirectional following relationships
+  - Your true connections on GitHub
+
+**Load More Feature**: 
+- If a user has more than 500 followers/following, use the "Load More" buttons
+- Each click loads an additional 100 users
+- Search functionality works across all loaded users
+
+### Exploring Repository Analytics
+
+The Repositories tab provides comprehensive repository information:
+
+1. **View All Repos**: See all repositories with stars, forks, and watchers
+2. **Sort Repositories**: Use the dropdown to sort by:
+   - Stars (highest to lowest)
+   - Forks (most to least)
+   - Created (newest first or oldest first)
+   - Updated (most recently updated)
+3. **Search Repos**: Use the search box to filter by repository name
+4. **Click to Visit**: Click any repository card to open it on GitHub
+
+### Viewing Language Statistics
+
+The Languages tab shows:
+- **Bar Chart**: Visual representation of language distribution
+- **Repository Count**: Number of repos using each language
+- **Percentage**: What portion of repos use each language
+- **Color Coding**: Each language has a distinct color
 
 ### Searching GitHub
 
-Use the Search tab to find:
-- Users by username or name
-- Repositories by name or description
-- Commits, issues, and topics
+The Search tab allows you to search across GitHub:
+
+1. **Select Search Type**: Choose from Users, Repositories, Commits, Issues, or Topics
+2. **Enter Query**: Type your search term
+3. **Click Search**: View up to 20 results with detailed information
+4. **Browse Results**: Each result type shows relevant information:
+   - **Users**: Avatar, username, and bio
+   - **Repositories**: Name, description, stars, forks, and language
+   - **Commits/Issues/Topics**: Relevant metadata for each type
 
 ## 🏗️ Project Structure
 
@@ -220,7 +268,6 @@ npm run lint         # Run ESLint
    - `GITHUB_CLIENT_ID` - Your GitHub OAuth App Client ID
    - `GITHUB_CLIENT_SECRET` - Your GitHub OAuth App Client Secret
    - `NEXT_PUBLIC_APP_URL` - Your production URL (e.g., `https://your-app.vercel.app`)
-   - `NEXT_PUBLIC_GITHUB_TOKEN` (optional) - Shared token as fallback
 4. Update your GitHub OAuth App's callback URL to: `https://your-app.vercel.app/api/auth/callback/github`
 5. Deploy!
 
@@ -234,11 +281,15 @@ This is a standard Next.js application and can be deployed to:
 
 ## 🔒 Privacy & Security
 
-- **No Data Storage**: This application doesn't store any user data permanently
-- **Secure Token Storage**: OAuth tokens are stored in httpOnly cookies (server-side only)
-- **Read-Only Access**: Only reads public GitHub data
-- **Token Security**: Tokens are never exposed to client-side JavaScript (OAuth) or stored securely (manual tokens)
+- **No Data Storage**: This application doesn't store any user data permanently in a database
+- **Secure Token Storage**: OAuth access tokens are stored in httpOnly cookies (server-side only, not accessible to JavaScript)
+- **Session-Based Authentication**: User sessions are managed securely with automatic expiration
+- **Read-Only Access**: The app only reads public GitHub data - no write permissions
+- **Token Security**: OAuth tokens are never exposed to client-side JavaScript
 - **CSRF Protection**: OAuth flow includes state parameter for CSRF protection
+- **No Third-Party Tracking**: No analytics or tracking scripts
+- **Automatic Logout**: Users can logout anytime to clear their session and tokens
+- **Secure API Routes**: All authentication endpoints use secure HTTP-only cookies
 
 ## 📊 API Rate Limits
 

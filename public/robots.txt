@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow API routes from being indexed
+User-agent: *
+Disallow: /api/
+
+# Sitemap (update with your production URL)
+# Sitemap: https://your-domain.com/sitemap.xml

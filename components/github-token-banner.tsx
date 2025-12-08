@@ -38,27 +38,6 @@ export function GitHubTokenBanner() {
             Login with GitHub
           </Button>
         </div>
-        <div className="mb-3">
-          <p className="text-sm font-medium mb-1">Alternative: Manual Token Setup</p>
-          <ol className="list-decimal list-inside space-y-1 text-sm">
-            <li>
-              Go to{' '}
-              <a
-                href="https://github.com/settings/tokens"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline inline-flex items-center hover:text-orange-900 dark:hover:text-orange-200"
-              >
-                GitHub Token Settings
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </a>
-            </li>
-            <li>Create a new token with <code className="bg-orange-100 dark:bg-orange-900 px-1 rounded">public_repo</code> and <code className="bg-orange-100 dark:bg-orange-900 px-1 rounded">read:user</code> scopes</li>
-            <li>Create a <code className="bg-orange-100 dark:bg-orange-900 px-1 rounded">.env.local</code> file in your project root</li>
-            <li>Add: <code className="bg-orange-100 dark:bg-orange-900 px-1 rounded">NEXT_PUBLIC_GITHUB_TOKEN=your_token</code></li>
-            <li>Restart the development server</li>
-          </ol>
-        </div>
         <Button
           variant="outline"
           size="sm"

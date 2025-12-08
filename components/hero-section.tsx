@@ -23,24 +23,24 @@ export function HeroSection() {
         <div className="flex items-center justify-center space-x-4 mb-8">
           <div className="w-16 h-16 relative">
             <Image
-              src="/GitHub-Symbol.png"
-              alt="GitHub Logo"
+              src="/statspet.png"
+              alt="GitHub Analytics Logo"
               width={64}
               height={64}
-              className="dark:invert"
+              className="rounded-lg"
             />
           </div>
           <div className="w-12 h-12 bg-gradient-to-br from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 rounded-xl flex items-center justify-center">
             <BarChart3 className="w-6 h-6 text-white dark:text-black" />
           </div>
         </div>
-        
+
         <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-500 dark:from-neutral-100 dark:via-neutral-300 dark:to-neutral-500 bg-clip-text text-transparent">
           GitHub Analytics
         </h1>
-        
+
         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Unlock powerful insights from any GitHub profile. Discover follower patterns, 
+          Unlock powerful insights from any GitHub profile. Discover follower patterns,
           repository analytics, and development trends with beautiful visualizations.
         </p>
       </motion.div>
