@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'GitHub Analytics Dashboard - Analyze Profiles, Followers & Repositories',
+  title: 'MyGitStats - Analyze GitHub Profiles, Followers & Repositories',
   description: 'Analyze GitHub profiles with advanced follower insights, repository analytics, language statistics, and powerful search. Track who follows you back, sort repos by stars, and discover GitHub trends.',
   keywords: [
     'GitHub',
@@ -27,16 +27,16 @@ export const metadata: Metadata = {
     'GitHub search',
     'developer tools',
   ],
-  authors: [{ name: 'GitHub Analytics Dashboard' }],
+  authors: [{ name: 'MyGitStats' }],
   openGraph: {
-    title: 'GitHub Analytics Dashboard',
+    title: 'MyGitStats',
     description: 'Analyze GitHub profiles with advanced follower insights, repository analytics, and language statistics',
     type: 'website',
-    siteName: 'GitHub Analytics Dashboard',
+    siteName: 'MyGitStats',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GitHub Analytics Dashboard',
+    title: 'MyGitStats',
     description: 'Analyze GitHub profiles with advanced follower insights and repository analytics',
   },
   robots: {
@@ -46,6 +46,11 @@ export const metadata: Metadata = {
   viewport: {
     width: 'device-width',
     initialScale: 1,
+  },
+  icons: {
+    icon: '/statspet.png',
+    shortcut: '/statspet.png',
+    apple: '/statspet.png',
   },
 };
 

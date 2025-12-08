@@ -20,14 +20,14 @@ export function Header() {
           <div className="w-8 h-8 relative">
             <Image
               src="/statspet.png"
-              alt="GitHub Analytics Logo"
+              alt="MyGitStats Logo"
               width={32}
               height={32}
               className="rounded-lg dark:brightness-110 dark:contrast-110"
             />
           </div>
           <h1 className="text-xl font-bold bg-gradient-to-r from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent">
-            GitHub Analytics
+            MyGitStats
           </h1>
         </div>
 

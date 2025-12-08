@@ -24,7 +24,7 @@ export function HeroSection() {
           <div className="w-16 h-16 relative">
             <Image
               src="/statspet.png"
-              alt="GitHub Analytics Logo"
+              alt="MyGitStats Logo"
               width={64}
               height={64}
               className="rounded-lg dark:brightness-110 dark:contrast-110"
@@ -36,7 +36,7 @@ export function HeroSection() {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-500 dark:from-neutral-100 dark:via-neutral-300 dark:to-neutral-500 bg-clip-text text-transparent">
-          GitHub Analytics
+          MyGitStats
         </h1>
 
         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
