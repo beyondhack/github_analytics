@@ -1,4 +1,4 @@
-import { GitHubUser, Repository, GitHubFollower, RateLimit } from '@/types/github';
+import { GitHubUser, Repository, GitHubFollower, RateLimit, CommitStats, GitHubCommit } from '@/types/github';
 
 const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -21,7 +21,7 @@ async function getUserToken(): Promise<string | null> {
     // Try to get user's token from API
     const response = await fetch('/api/auth/token');
     const data = await response.json();
-    
+
     if (data.token) {
       userTokenCache = data.token;
       tokenCacheTime = Date.now();
@@ -127,7 +127,7 @@ async function fetchPaginatedData<T>(
         } else {
           allData.push(...data);
         }
-        
+
         hasMore = data.length === perPage; // Continue if we got a full page
         page++;
       } else {
@@ -205,6 +205,108 @@ export async function fetchUserGists(username: string): Promise<any[]> {
  */
 export async function fetchRateLimit(): Promise<RateLimit> {
   return fetchGitHubAPI('/rate_limit');
+}
+
+/**
+ * Fetch commit statistics for a user across all repositories
+ * @param username - GitHub username
+ * @param repositories - Array of user's repositories
+ */
+export async function fetchUserCommitStats(username: string, repositories: Repository[]): Promise<CommitStats> {
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+
+  let totalCommits = 0;
+  let commitsThisWeek = 0;
+  let commitsThisMonth = 0;
+  let commitsThisYear = 0;
+  let lastCommitDate: Date | null = null;
+
+  const dayCommits: Record<string, number> = {};
+  const monthCommits: Record<string, number> = {};
+
+  // Filter out forked repos and limit to most recent repos to avoid rate limits
+  const ownRepos = repositories
+    .filter(repo => !repo.fork)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, 20); // Limit to 20 most recently updated repos
+
+  // Fetch commits from each repository
+  for (const repo of ownRepos) {
+    try {
+      // Fetch commits from the last year only to reduce API calls
+      const since = oneYearAgo.toISOString();
+      const commits = await fetchPaginatedData<GitHubCommit>(
+        `/repos/${repo.full_name}/commits?author=${username}&since=${since}`,
+        100,
+        500 // Limit to 500 commits per repo
+      );
+
+      for (const commit of commits) {
+        const commitDate = new Date(commit.commit.author.date);
+        totalCommits++;
+
+        // Track last commit
+        if (!lastCommitDate || commitDate > lastCommitDate) {
+          lastCommitDate = commitDate;
+        }
+
+        // Count commits by time period
+        if (commitDate >= oneWeekAgo) commitsThisWeek++;
+        if (commitDate >= oneMonthAgo) commitsThisMonth++;
+        if (commitDate >= oneYearAgo) commitsThisYear++;
+
+        // Track by day of week
+        const dayName = commitDate.toLocaleDateString('en-US', { weekday: 'long' });
+        dayCommits[dayName] = (dayCommits[dayName] || 0) + 1;
+
+        // Track by month
+        const monthName = commitDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        monthCommits[monthName] = (monthCommits[monthName] || 0) + 1;
+      }
+    } catch (error) {
+      console.error(`Failed to fetch commits for ${repo.name}:`, error);
+      // Continue with other repos even if one fails
+    }
+  }
+
+  // Calculate most productive day
+  let mostProductiveDay = 'N/A';
+  let maxDayCommits = 0;
+  for (const [day, count] of Object.entries(dayCommits)) {
+    if (count > maxDayCommits) {
+      maxDayCommits = count;
+      mostProductiveDay = day;
+    }
+  }
+
+  // Calculate most productive month
+  let mostProductiveMonth = 'N/A';
+  let maxMonthCommits = 0;
+  for (const [month, count] of Object.entries(monthCommits)) {
+    if (count > maxMonthCommits) {
+      maxMonthCommits = count;
+      mostProductiveMonth = month;
+    }
+  }
+
+  // Calculate average commits per day (based on account age)
+  const accountCreatedDate = new Date(repositories[0]?.created_at || now);
+  const daysSinceCreation = Math.max(1, Math.floor((now.getTime() - accountCreatedDate.getTime()) / (24 * 60 * 60 * 1000)));
+  const averageCommitsPerDay = totalCommits / daysSinceCreation;
+
+  return {
+    totalCommits,
+    commitsThisWeek,
+    commitsThisMonth,
+    commitsThisYear,
+    averageCommitsPerDay: parseFloat(averageCommitsPerDay.toFixed(2)),
+    mostProductiveDay,
+    mostProductiveMonth,
+    lastCommitDate: lastCommitDate ? lastCommitDate.toISOString() : new Date().toISOString(),
+  };
 }
 
 /**

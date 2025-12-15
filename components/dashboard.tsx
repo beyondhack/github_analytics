@@ -19,11 +19,12 @@ import { UserProfile } from '@/components/user-profile';
 import { RepositoryAnalytics } from '@/components/repository-analytics';
 import { FollowerInsights } from '@/components/follower-insights';
 import { LanguageStats } from '@/components/language-stats';
+import { CommitStatsComponent } from '@/components/commit-stats';
 import { RateLimitStatus } from '@/components/rate-limit-status';
 import { SearchFeatures } from '@/components/search-features';
 import { GitHubTokenBanner } from '@/components/github-token-banner';
-import { GitHubUser, Repository, GitHubFollower } from '@/types/github';
-import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit, hasGitHubToken } from '@/lib/github-api';
+import { GitHubUser, Repository, GitHubFollower, CommitStats } from '@/types/github';
+import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit, hasGitHubToken, fetchUserCommitStats } from '@/lib/github-api';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 
@@ -39,8 +40,10 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [followers, setFollowers] = useState<GitHubFollower[]>([]);
   const [following, setFollowing] = useState<GitHubFollower[]>([]);
+  const [commitStats, setCommitStats] = useState<CommitStats | null>(null);
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingCommits, setLoadingCommits] = useState(false);
   const [loadingMore, setLoadingMore] = useState({ followers: false, following: false });
   const [showTokenBanner, setShowTokenBanner] = useState(false);
   const [showRefreshDialog, setShowRefreshDialog] = useState(false);
@@ -63,7 +66,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         // Determine if we should limit followers/following based on profile size
         const shouldLimitFollowers = user.followers > MAX_FOLLOWERS_TO_LOAD;
         const shouldLimitFollowing = user.following > MAX_FOLLOWERS_TO_LOAD;
-        
+
         // Show appropriate message based on whether we're limiting
         if (shouldLimitFollowers || shouldLimitFollowing) {
           toast.info(`Loading first ${MAX_FOLLOWERS_TO_LOAD} followers/following for faster performance. Insights will be approximate.`);
@@ -82,19 +85,33 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         setFollowers(followersData);
         setFollowing(followingData);
         setRateLimit(rateLimitData);
-        
+
+        // Fetch commit stats after repositories are loaded
+        if (reposData.length > 0) {
+          setLoadingCommits(true);
+          try {
+            const commitStatsData = await fetchUserCommitStats(user.login, reposData);
+            setCommitStats(commitStatsData);
+          } catch (error) {
+            console.error('Failed to fetch commit stats:', error);
+            toast.error('Failed to load commit statistics');
+          } finally {
+            setLoadingCommits(false);
+          }
+        }
+
         // Reset page counters
         setCurrentFollowersPage(shouldLimitFollowers ? Math.ceil(followersData.length / 100) : 1);
         setCurrentFollowingPage(shouldLimitFollowing ? Math.ceil(followingData.length / 100) : 1);
 
         // Show success message with counts
-        const followersMsg = shouldLimitFollowers 
+        const followersMsg = shouldLimitFollowers
           ? `${followersData.length} of ${user.followers.toLocaleString()} followers`
           : `${followersData.length} followers`;
         const followingMsg = shouldLimitFollowing
           ? `${followingData.length} of ${user.following.toLocaleString()} following`
           : `${followingData.length} following`;
-        
+
         const message = `Loaded ${reposData.length} repositories, ${followersMsg}, ${followingMsg}`;
         toast.success(message);
       } catch (error) {
@@ -136,11 +153,11 @@ export function Dashboard({ user, onReset }: DashboardProps) {
       setFollowers(followersData);
       setFollowing(followingData);
       setRateLimit(rateLimitData);
-      
+
       // Reset page counters
       setCurrentFollowersPage(shouldLimitFollowers ? Math.ceil(followersData.length / 100) : 1);
       setCurrentFollowingPage(shouldLimitFollowing ? Math.ceil(followingData.length / 100) : 1);
-      
+
       toast.success('Data refreshed successfully');
     } catch (error) {
       toast.error('Failed to refresh data');
@@ -151,7 +168,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
 
   const loadMoreFollowers = async () => {
     if (loadingMore.followers || followers.length >= user.followers) return;
-    
+
     setLoadingMore(prev => ({ ...prev, followers: true }));
     try {
       // Calculate next page: if we have 500 items (5 pages), next page is 6
@@ -162,7 +179,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         MAX_FOLLOWERS_TO_LOAD,
         nextPage
       );
-      
+
       if (additionalData.length > 0) {
         setFollowers(prev => {
           const newLength = prev.length + additionalData.length;
@@ -183,7 +200,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
 
   const loadMoreFollowing = async () => {
     if (loadingMore.following || following.length >= user.following) return;
-    
+
     setLoadingMore(prev => ({ ...prev, following: true }));
     try {
       // Calculate next page: if we have 500 items (5 pages), next page is 6
@@ -194,7 +211,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         MAX_FOLLOWERS_TO_LOAD,
         nextPage
       );
-      
+
       if (additionalData.length > 0) {
         setFollowing(prev => {
           const newLength = prev.length + additionalData.length;
@@ -216,7 +233,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   return (
     <div className="space-y-6">
       {showTokenBanner && <GitHubTokenBanner />}
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -230,7 +247,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Search</span>
         </Button>
-        
+
         <div className="flex items-center space-x-4">
           <RateLimitStatus rateLimit={rateLimit} />
           <Button
@@ -248,23 +265,31 @@ export function Dashboard({ user, onReset }: DashboardProps) {
       <UserProfile user={user} />
 
       <Tabs defaultValue="repositories" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="repositories">Repositories</TabsTrigger>
+          <TabsTrigger value="commits">Commits</TabsTrigger>
           <TabsTrigger value="followers">Followers</TabsTrigger>
           <TabsTrigger value="languages">Languages</TabsTrigger>
           <TabsTrigger value="search">Search</TabsTrigger>
         </TabsList>
 
         <TabsContent value="repositories">
-          <RepositoryAnalytics 
-            repositories={repositories} 
+          <RepositoryAnalytics
+            repositories={repositories}
             username={user.login}
             loading={loading}
           />
         </TabsContent>
 
+        <TabsContent value="commits">
+          <CommitStatsComponent
+            stats={commitStats}
+            loading={loadingCommits}
+          />
+        </TabsContent>
+
         <TabsContent value="followers">
-          <FollowerInsights 
+          <FollowerInsights
             followers={followers}
             following={following}
             loading={loading}
@@ -278,7 +303,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         </TabsContent>
 
         <TabsContent value="languages">
-          <LanguageStats 
+          <LanguageStats
             repositories={repositories}
             loading={loading}
           />
@@ -295,7 +320,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Refresh Data from Beginning?</AlertDialogTitle>
             <AlertDialogDescription>
-              This profile has a large number of followers or following. Refreshing will reload all data from the beginning, 
+              This profile has a large number of followers or following. Refreshing will reload all data from the beginning,
               which may take some time and use API rate limits. The current loaded data will be replaced.
               <br /><br />
               Would you like to continue?

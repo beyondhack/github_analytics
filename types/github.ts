@@ -77,3 +77,30 @@ export interface RateLimit {
     used: number;
   };
 }
+
+export interface CommitStats {
+  totalCommits: number;
+  commitsThisWeek: number;
+  commitsThisMonth: number;
+  commitsThisYear: number;
+  averageCommitsPerDay: number;
+  mostProductiveDay: string;
+  mostProductiveMonth: string;
+  lastCommitDate: string;
+}
+
+export interface GitHubCommit {
+  sha: string;
+  commit: {
+    author: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    message: string;
+  };
+  author: {
+    login: string;
+    avatar_url: string;
+  } | null;
+}
