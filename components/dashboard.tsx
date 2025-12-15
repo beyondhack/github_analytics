@@ -44,6 +44,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadingCommits, setLoadingCommits] = useState(false);
+  const [hasLoadedCommits, setHasLoadedCommits] = useState(false);
   const [loadingMore, setLoadingMore] = useState({ followers: false, following: false });
   const [showTokenBanner, setShowTokenBanner] = useState(false);
   const [showRefreshDialog, setShowRefreshDialog] = useState(false);
@@ -85,20 +86,6 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         setFollowers(followersData);
         setFollowing(followingData);
         setRateLimit(rateLimitData);
-
-        // Fetch commit stats after repositories are loaded
-        if (reposData.length > 0) {
-          setLoadingCommits(true);
-          try {
-            const commitStatsData = await fetchUserCommitStats(user.login, reposData);
-            setCommitStats(commitStatsData);
-          } catch (error) {
-            console.error('Failed to fetch commit stats:', error);
-            toast.error('Failed to load commit statistics');
-          } finally {
-            setLoadingCommits(false);
-          }
-        }
 
         // Reset page counters
         setCurrentFollowersPage(shouldLimitFollowers ? Math.ceil(followersData.length / 100) : 1);
@@ -163,6 +150,25 @@ export function Dashboard({ user, onReset }: DashboardProps) {
       toast.error('Failed to refresh data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch commit stats on-demand when Commits tab is accessed
+  const loadCommitStats = async () => {
+    if (hasLoadedCommits || repositories.length === 0 || loadingCommits) return;
+
+    setLoadingCommits(true);
+    setHasLoadedCommits(true);
+    try {
+      const commitStatsData = await fetchUserCommitStats(user.login, repositories);
+      setCommitStats(commitStatsData);
+      toast.success('Commit statistics loaded successfully');
+    } catch (error) {
+      console.error('Failed to fetch commit stats:', error);
+      toast.error('Failed to load commit statistics');
+      setHasLoadedCommits(false); // Allow retry on error
+    } finally {
+      setLoadingCommits(false);
     }
   };
 
@@ -264,7 +270,11 @@ export function Dashboard({ user, onReset }: DashboardProps) {
 
       <UserProfile user={user} />
 
-      <Tabs defaultValue="repositories" className="space-y-6">
+      <Tabs defaultValue="repositories" className="space-y-6" onValueChange={(value) => {
+        if (value === 'commits') {
+          loadCommitStats();
+        }
+      }}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="repositories">Repositories</TabsTrigger>
           <TabsTrigger value="commits">Commits</TabsTrigger>
