@@ -111,9 +111,17 @@ export function RepositoryAnalytics({ repositories, username, loading }: Reposit
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
-                <Card className={`h-full hover:shadow-lg transition-all border-2 ${medalStyle.borderColor} ${medalStyle.bgColor} ${medalStyle.shadowColor}`}>
+                <Card className={`h-full hover:shadow-lg transition-all border-2 ${medalStyle.borderColor} ${medalStyle.bgColor} ${medalStyle.shadowColor} relative`}>
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
+                    {/* Ranking Badge */}
+                    <div className={`absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-yellow-500 text-white' :
+                        index === 1 ? 'bg-gray-400 text-white' :
+                          'bg-orange-600 text-white'
+                      } shadow-md`}>
+                      {index + 1}
+                    </div>
+
+                    <div className="flex items-start justify-between mb-3 ml-10">
                       <h4 className="font-semibold text-lg truncate">{repo.name}</h4>
                       <a
                         href={repo.html_url}
