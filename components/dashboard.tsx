@@ -149,25 +149,6 @@ export function Dashboard({ user, onReset }: DashboardProps) {
     }
   };
 
-  // Fetch commit stats on-demand when Commits tab is accessed
-  const loadCommitStats = async () => {
-    if (hasLoadedCommits || repositories.length === 0 || loadingCommits) return;
-
-    setLoadingCommits(true);
-    setHasLoadedCommits(true);
-    try {
-      const commitStatsData = await fetchUserCommitStats(user.login, repositories);
-      setCommitStats(commitStatsData);
-      toast.success('Commit statistics loaded successfully');
-    } catch (error) {
-      console.error('Failed to fetch commit stats:', error);
-      toast.error('Failed to load commit statistics');
-      setHasLoadedCommits(false); // Allow retry on error
-    } finally {
-      setLoadingCommits(false);
-    }
-  };
-
   const loadMoreFollowers = async () => {
     if (loadingMore.followers || followers.length >= user.followers) return;
 
@@ -279,13 +260,6 @@ export function Dashboard({ user, onReset }: DashboardProps) {
             repositories={repositories}
             username={user.login}
             loading={loading}
-          />
-        </TabsContent>
-
-        <TabsContent value="commits">
-          <CommitStatsComponent
-            stats={commitStats}
-            loading={loadingCommits}
           />
         </TabsContent>
 
