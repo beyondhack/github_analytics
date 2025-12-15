@@ -21,8 +21,38 @@ export function RepositoryAnalytics({ repositories, username, loading }: Reposit
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('stars');
 
+  // Medal colors for top 3 repositories
+  const getMedalStyle = (index: number) => {
+    switch (index) {
+      case 0:
+        return {
+          borderColor: 'border-yellow-500/50',
+          bgColor: 'bg-gradient-to-br from-yellow-50/50 to-amber-50/30 dark:from-yellow-950/20 dark:to-amber-950/10',
+          shadowColor: 'shadow-yellow-500/20',
+        };
+      case 1:
+        return {
+          borderColor: 'border-gray-400/50',
+          bgColor: 'bg-gradient-to-br from-gray-50/50 to-slate-50/30 dark:from-gray-800/20 dark:to-slate-800/10',
+          shadowColor: 'shadow-gray-400/20',
+        };
+      case 2:
+        return {
+          borderColor: 'border-orange-600/50',
+          bgColor: 'bg-gradient-to-br from-orange-50/50 to-amber-100/30 dark:from-orange-950/20 dark:to-amber-900/10',
+          shadowColor: 'shadow-orange-600/20',
+        };
+      default:
+        return {
+          borderColor: '',
+          bgColor: '',
+          shadowColor: '',
+        };
+    }
+  };
+
   const filteredAndSortedRepos = repositories
-    .filter(repo => 
+    .filter(repo =>
       repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (repo.description && repo.description.toLowerCase().includes(searchTerm.toLowerCase()))
     )
@@ -72,64 +102,67 @@ export function RepositoryAnalytics({ repositories, username, loading }: Reposit
       <div>
         <h3 className="text-lg font-semibold mb-4">Top Repositories</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {topRepos.map((repo, index) => (
-            <motion.div
-              key={repo.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-            >
-              <Card className="h-full hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <h4 className="font-semibold text-lg truncate">{repo.name}</h4>
-                    <a
-                      href={repo.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                  
-                  {repo.description && (
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {repo.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4" />
-                      <span>{repo.stargazers_count}</span>
+          {topRepos.map((repo, index) => {
+            const medalStyle = getMedalStyle(index);
+            return (
+              <motion.div
+                key={repo.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+              >
+                <Card className={`h-full hover:shadow-lg transition-all border-2 ${medalStyle.borderColor} ${medalStyle.bgColor} ${medalStyle.shadowColor}`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="font-semibold text-lg truncate">{repo.name}</h4>
+                      <a
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <GitFork className="w-4 h-4" />
-                      <span>{repo.forks_count}</span>
-                    </div>
-                    {repo.watchers_count > 0 && (
+
+                    {repo.description && (
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                        {repo.description}
+                      </p>
+                    )}
+
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
                       <div className="flex items-center space-x-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{repo.watchers_count}</span>
+                        <Star className="w-4 h-4" />
+                        <span>{repo.stargazers_count}</span>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    {repo.language && (
-                      <Badge variant="secondary" className="text-xs">
-                        {repo.language}
-                      </Badge>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      Updated {formatDate(repo.updated_at)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                      <div className="flex items-center space-x-1">
+                        <GitFork className="w-4 h-4" />
+                        <span>{repo.forks_count}</span>
+                      </div>
+                      {repo.watchers_count > 0 && (
+                        <div className="flex items-center space-x-1">
+                          <Eye className="w-4 h-4" />
+                          <span>{repo.watchers_count}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      {repo.language && (
+                        <Badge variant="secondary" className="text-xs">
+                          {repo.language}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        Updated {formatDate(repo.updated_at)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
@@ -188,13 +221,13 @@ export function RepositoryAnalytics({ repositories, username, loading }: Reposit
                         <Badge variant="outline" className="text-xs">Fork</Badge>
                       )}
                     </div>
-                    
+
                     {repo.description && (
                       <p className="text-sm text-muted-foreground mb-3">
                         {repo.description}
                       </p>
                     )}
-                    
+
                     <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                       {repo.language && (
                         <div className="flex items-center space-x-1">
@@ -219,7 +252,7 @@ export function RepositoryAnalytics({ repositories, username, loading }: Reposit
                 </div>
               </motion.div>
             ))}
-            
+
             {filteredAndSortedRepos.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 No repositories found matching your search.

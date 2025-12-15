@@ -9,9 +9,7 @@ import Image from 'next/image';
 export function Header() {
   const { theme, setTheme } = useTheme();
 
-  const handleBoltClick = () => {
-    window.open('https://bolt.new/', '_blank', 'noopener,noreferrer');
-  };
+
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,19 +43,6 @@ export function Header() {
             <span className="sr-only">Toggle theme</span>
           </Button>
 
-          <button
-            onClick={handleBoltClick}
-            className="w-10 h-10 relative cursor-pointer transition-transform hover:scale-110 float-animation group"
-            aria-label="Visit Bolt.new"
-          >
-            <Image
-              src="/black_circle_360x360.png"
-              alt="Bolt Logo"
-              width={40}
-              height={40}
-              className="rounded-full group-hover:spin-slow transition-all duration-300"
-            />
-          </button>
         </div>
       </div>
     </header>
