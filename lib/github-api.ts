@@ -239,7 +239,7 @@ export async function fetchUserCommitStats(username: string, repositories: Repos
       // Fetch commits from the last year only to reduce API calls
       const since = oneYearAgo.toISOString();
       const commits = await fetchPaginatedData<GitHubCommit>(
-        `/repos/${repo.full_name}/commits?author=${username}&since=${since}`,
+        `/repos/${repo.full_name}/commits?since=${since}`,
         100,
         500 // Limit to 500 commits per repo
       );

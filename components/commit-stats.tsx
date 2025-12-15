@@ -175,8 +175,8 @@ export function CommitStatsComponent({ stats, loading }: CommitStatsProps) {
 
             <div className="mt-6 p-4 bg-muted/50 rounded-lg border">
                 <p className="text-sm text-muted-foreground">
-                    <strong>Note:</strong> Commit statistics are calculated from your most recent repositories to optimize API usage.
-                    The data represents commits from the last year where you are listed as the author.
+                    <strong>Note:</strong> Commit statistics are calculated from the top 20 most recently updated repositories (excluding forks) to optimize API usage.
+                    The data represents all commits from the last year in these repositories.
                 </p>
             </div>
         </div>
