@@ -19,12 +19,11 @@ import { UserProfile } from '@/components/user-profile';
 import { RepositoryAnalytics } from '@/components/repository-analytics';
 import { FollowerInsights } from '@/components/follower-insights';
 import { LanguageStats } from '@/components/language-stats';
-import { CommitStatsComponent } from '@/components/commit-stats';
 import { RateLimitStatus } from '@/components/rate-limit-status';
 import { SearchFeatures } from '@/components/search-features';
 import { GitHubTokenBanner } from '@/components/github-token-banner';
-import { GitHubUser, Repository, GitHubFollower, CommitStats } from '@/types/github';
-import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit, hasGitHubToken, fetchUserCommitStats } from '@/lib/github-api';
+import { GitHubUser, Repository, GitHubFollower } from '@/types/github';
+import { fetchUserRepositories, fetchUserFollowers, fetchUserFollowing, fetchRateLimit, hasGitHubToken } from '@/lib/github-api';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 
@@ -40,11 +39,8 @@ export function Dashboard({ user, onReset }: DashboardProps) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [followers, setFollowers] = useState<GitHubFollower[]>([]);
   const [following, setFollowing] = useState<GitHubFollower[]>([]);
-  const [commitStats, setCommitStats] = useState<CommitStats | null>(null);
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingCommits, setLoadingCommits] = useState(false);
-  const [hasLoadedCommits, setHasLoadedCommits] = useState(false);
   const [loadingMore, setLoadingMore] = useState({ followers: false, following: false });
   const [showTokenBanner, setShowTokenBanner] = useState(false);
   const [showRefreshDialog, setShowRefreshDialog] = useState(false);
@@ -270,14 +266,9 @@ export function Dashboard({ user, onReset }: DashboardProps) {
 
       <UserProfile user={user} />
 
-      <Tabs defaultValue="repositories" className="space-y-6" onValueChange={(value) => {
-        if (value === 'commits') {
-          loadCommitStats();
-        }
-      }}>
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="repositories" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="repositories">Repositories</TabsTrigger>
-          <TabsTrigger value="commits">Commits</TabsTrigger>
           <TabsTrigger value="followers">Followers</TabsTrigger>
           <TabsTrigger value="languages">Languages</TabsTrigger>
           <TabsTrigger value="search">Search</TabsTrigger>
