@@ -1,13 +1,16 @@
 "use client";
 
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, MessageSquare } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AuthButton } from '@/components/auth-button';
 import Image from 'next/image';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
 
 
 
@@ -30,7 +33,19 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
+          <Link href="/community">
+            <Button
+              variant={pathname === '/community' ? 'default' : 'ghost'}
+              size="sm"
+              className="gap-2"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Community</span>
+            </Button>
+          </Link>
+
           <AuthButton />
+
 
           <Button
             variant="ghost"
