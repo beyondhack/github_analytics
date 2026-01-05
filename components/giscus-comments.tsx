@@ -62,7 +62,7 @@ export function GiscusComments({
     }, [repo, repoId, category, categoryId, resolvedTheme]);
 
     return (
-        <div className="w-full">
+        <div className="w-full min-h-[600px]">
             <div ref={commentsRef} className="giscus-container" />
         </div>
     );

@@ -126,3 +126,21 @@
     background-position: 200% 200%;
   }
 }
+
+/* Giscus Custom Styling - Make inputs and text areas larger */
+.giscus-container textarea,
+.giscus-container .gsc-comment-box-textarea {
+  min-height: 150px !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  padding: 16px !important;
+}
+
+.giscus-container .gsc-comment {
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+}
+
+.giscus-container .gsc-comment-box-main {
+  margin-bottom: 24px !important;
+}
