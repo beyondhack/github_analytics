@@ -16,9 +16,9 @@ interface GiscusCommentsProps {
  */
 export function GiscusComments({
     repo = "beyondhack/github_analytics",
-    repoId = "", // Will be auto-detected by Giscus
+    repoId = "R_kgDOQDH8uw",
     category = "Feedback",
-    categoryId = "", // Will be auto-detected by Giscus
+    categoryId = "DIC_kwDOQDH8u84C0OAI",
 }: Partial<GiscusCommentsProps>) {
     const { theme, resolvedTheme } = useTheme();
     const commentsRef = useRef<HTMLDivElement>(null);
