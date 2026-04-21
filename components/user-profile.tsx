@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, Star } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, Star, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,14 +10,16 @@ import { formatDate } from '@/lib/utils';
 
 interface UserProfileProps {
   user: GitHubUser;
+  totalStars?: number;
 }
 
-export function UserProfile({ user }: UserProfileProps) {
+export function UserProfile({ user, totalStars = 0 }: UserProfileProps) {
   const stats = [
     { label: 'Repositories', value: user.public_repos, icon: BookOpen },
+    { label: 'Total Stars', value: totalStars, icon: Star },
     { label: 'Followers', value: user.followers, icon: Users },
     { label: 'Following', value: user.following, icon: Users },
-    { label: 'Gists', value: user.public_gists, icon: Star },
+    { label: 'Gists', value: user.public_gists, icon: FileText },
   ];
 
   return (
@@ -70,7 +72,7 @@ export function UserProfile({ user }: UserProfileProps) {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {stats.map((stat, index) => (
                   <motion.div
                     key={stat.label}

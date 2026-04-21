@@ -245,7 +245,7 @@ export function Dashboard({ user, onReset }: DashboardProps) {
         </div>
       </motion.div>
 
-      <UserProfile user={user} />
+      <UserProfile user={user} totalStars={repositories.reduce((sum, repo) => sum + repo.stargazers_count, 0)} />
 
       <Tabs defaultValue="repositories" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
