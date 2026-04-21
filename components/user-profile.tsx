@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, Star, FileText } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, Star, FileText, GitFork } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,12 +11,48 @@ import { formatDate } from '@/lib/utils';
 interface UserProfileProps {
   user: GitHubUser;
   totalStars?: number;
+  totalForks?: number;
 }
 
-export function UserProfile({ user, totalStars = 0 }: UserProfileProps) {
+export function UserProfile({ user, totalStars = 0, totalForks = 0 }: UserProfileProps) {
+  const getAccountAgeAndAnniversary = () => {
+    const createdDate = new Date(user.created_at);
+    const now = new Date();
+    
+    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const years = Math.floor(diffDays / 365);
+
+    let ageStr = `${years} year${years !== 1 ? 's' : ''}`;
+    if (years === 0) {
+      ageStr = `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+    }
+
+    const nextAnniversary = new Date(now.getFullYear(), createdDate.getMonth(), createdDate.getDate());
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (nextAnniversary < today) {
+      nextAnniversary.setFullYear(now.getFullYear() + 1);
+    }
+    
+    const daysToAnniversary = Math.ceil((nextAnniversary.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let anniversaryStr = '';
+    if (daysToAnniversary === 0) {
+      anniversaryStr = "🎉 Anniversary Today!";
+    } else {
+      anniversaryStr = `Anniversary in ${daysToAnniversary} day${daysToAnniversary !== 1 ? 's' : ''}`;
+    }
+
+    return { ageStr, anniversaryStr };
+  };
+
+  const { ageStr, anniversaryStr } = getAccountAgeAndAnniversary();
+
   const stats = [
     { label: 'Repositories', value: user.public_repos, icon: BookOpen },
     { label: 'Total Stars', value: totalStars, icon: Star },
+    { label: 'Total Forks', value: totalForks, icon: GitFork },
     { label: 'Followers', value: user.followers, icon: Users },
     { label: 'Following', value: user.following, icon: Users },
     { label: 'Gists', value: user.public_gists, icon: FileText },
@@ -66,13 +102,17 @@ export function UserProfile({ user, totalStars = 0 }: UserProfileProps) {
                     </a>
                   </div>
                 )}
-                <div className="flex items-center space-x-1">
-                  <Calendar className="w-4 h-4" />
+                <div className="flex items-center space-x-1 flex-wrap gap-y-1">
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
                   <span>Joined {formatDate(user.created_at)}</span>
+                  <span className="text-muted-foreground mx-1">•</span>
+                  <span className="text-primary font-medium">{ageStr}</span>
+                  <span className="text-muted-foreground mx-1">•</span>
+                  <span className="text-muted-foreground">{anniversaryStr}</span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
                 {stats.map((stat, index) => (
                   <motion.div
                     key={stat.label}
