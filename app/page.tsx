@@ -50,6 +50,33 @@ function OAuthCallbackHandler() {
 function HomeContent() {
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const u = searchParams.get('u');
+
+  useEffect(() => {
+    if (u && (!user || user.login.toLowerCase() !== u.toLowerCase())) {
+      const fetchUser = async () => {
+        setLoading(true);
+        try {
+          const { fetchGitHubUser } = await import('@/lib/github-api');
+          const data = await fetchGitHubUser(u);
+          setUser(data);
+        } catch (error) {
+          toast.error(`User ${u} not found`);
+          // Clean up URL if invalid
+          window.history.replaceState({}, '', '/');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchUser();
+    }
+  }, [u, user]);
+
+  const handleReset = () => {
+    setUser(null);
+    window.history.replaceState({}, '', '/');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -75,7 +102,7 @@ function HomeContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Dashboard user={user} onReset={() => setUser(null)} />
+            <Dashboard user={user} onReset={handleReset} />
           </motion.div>
         )}
       </main>
@@ -85,11 +112,9 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <>
-      <Suspense fallback={null}>
-        <OAuthCallbackHandler />
-      </Suspense>
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20" />}>
+      <OAuthCallbackHandler />
       <HomeContent />
-    </>
+    </Suspense>
   );
 }

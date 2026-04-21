@@ -35,6 +35,7 @@ export function UserSearch({ onUserFound, loading, setLoading }: UserSearchProps
     setLoading(true);
     try {
       const user = await fetchGitHubUser(username.trim());
+      window.history.pushState({}, '', `/?u=${user.login}`);
       onUserFound(user);
       toast.success(`Found ${user.name || user.login}!`);
     } catch (error) {
@@ -51,6 +52,7 @@ export function UserSearch({ onUserFound, loading, setLoading }: UserSearchProps
     setLoading(true);
     try {
       const user = await fetchGitHubUser(randomUser);
+      window.history.pushState({}, '', `/?u=${user.login}`);
       onUserFound(user);
       toast.success(`Found ${user.name || user.login}! 🍀`);
     } catch (error) {

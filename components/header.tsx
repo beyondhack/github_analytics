@@ -1,16 +1,18 @@
 "use client";
 
-import { Moon, Sun, MessageSquare } from 'lucide-react';
+import { Moon, Sun, MessageSquare, User } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AuthButton } from '@/components/auth-button';
+import { useAuth } from '@/contexts/auth-context';
 import Image from 'next/image';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const { user: authUser } = useAuth();
 
 
 
@@ -43,6 +45,19 @@ export function Header() {
               <span className="hidden sm:inline">Community</span>
             </Button>
           </Link>
+
+          {authUser && (
+            <Link href={`/?u=${authUser.login}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-primary/50 hover:bg-primary/10 text-primary"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">My Profile</span>
+              </Button>
+            </Link>
+          )}
 
           <AuthButton />
 
