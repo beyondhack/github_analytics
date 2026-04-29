@@ -92,7 +92,7 @@ export default function CommunityPage() {
                                     Community Feedback
                                 </h1>
                                 <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                                    Share your ideas, report issues, and help shape the future of <span className="font-semibold text-foreground">MyGitStats</span>
+                                    Share your ideas, report issues, and help shape the future of <span className="font-semibold text-foreground">LytGit</span>
                                 </p>
                                 <p className="text-base text-muted-foreground/80 max-w-2xl mx-auto">
                                     Your feedback drives our development roadmap. Join the conversation and make your voice heard! 🚀

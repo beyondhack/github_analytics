@@ -1,4 +1,4 @@
-# 📊 MyGitStats - GitHub Analytics Dashboard
+# 📊 LytGit - GitHub Analytics Dashboard
 
 > A beautiful, modern analytics dashboard for exploring GitHub profiles, repositories, and follower insights.
 

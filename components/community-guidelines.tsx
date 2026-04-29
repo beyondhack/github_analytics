@@ -56,7 +56,7 @@ export function CommunityGuidelines() {
                         <div>
                             <h3 className="font-semibold mb-1">Purpose</h3>
                             <p className="text-sm text-muted-foreground">
-                                This community space is dedicated to <strong>feedback and feature requests</strong> for MyGitStats.
+                                This community space is dedicated to <strong>feedback and feature requests</strong> for LytGit.
                                 Share your ideas, report issues, and help us improve the platform for everyone.
                             </p>
                         </div>

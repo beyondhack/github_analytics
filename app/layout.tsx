@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'MyGitStats - Analyze GitHub Profiles, Followers & Repositories',
+  title: 'LytGit - Analyze GitHub Profiles, Followers & Repositories',
   description: 'Analyze GitHub profiles with advanced follower insights, repository analytics, language statistics, and powerful search. Track who follows you back, sort repos by stars, and discover GitHub trends.',
   keywords: [
     'GitHub',
@@ -27,16 +27,16 @@ export const metadata: Metadata = {
     'GitHub search',
     'developer tools',
   ],
-  authors: [{ name: 'MyGitStats' }],
+  authors: [{ name: 'LytGit' }],
   openGraph: {
-    title: 'MyGitStats',
+    title: 'LytGit',
     description: 'Analyze GitHub profiles with advanced follower insights, repository analytics, and language statistics',
     type: 'website',
-    siteName: 'MyGitStats',
+    siteName: 'LytGit',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MyGitStats',
+    title: 'LytGit',
     description: 'Analyze GitHub profiles with advanced follower insights and repository analytics',
   },
   robots: {
