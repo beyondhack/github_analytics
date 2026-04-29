@@ -20,18 +20,16 @@ export function Header() {
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 relative">
+          <Link href="/" className="relative block">
             <Image
               src="/lytgitheader.png"
               alt="LytGit Logo"
-              width={32}
-              height={32}
-              className="object-contain mix-blend-multiply dark:invert"
+              width={64}
+              height={64}
+              priority
+              className="object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
             />
-          </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent">
-            LytGit
-          </h1>
+          </Link>
         </div>
 
         <div className="flex items-center space-x-4">
