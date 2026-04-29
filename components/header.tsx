@@ -22,11 +22,11 @@ export function Header() {
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 relative">
             <Image
-              src="/statspet.png"
+              src="/lytgitheader.png"
               alt="LytGit Logo"
               width={32}
               height={32}
-              className="rounded-lg dark:brightness-110 dark:contrast-110"
+              className="object-contain mix-blend-multiply dark:invert"
             />
           </div>
           <h1 className="text-xl font-bold bg-gradient-to-r from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent">

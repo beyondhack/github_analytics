@@ -48,9 +48,9 @@ export const metadata: Metadata = {
     initialScale: 1,
   },
   icons: {
-    icon: '/statspet.png',
-    shortcut: '/statspet.png',
-    apple: '/statspet.png',
+    icon: '/lytgiticon.png',
+    shortcut: '/lytgiticon.png',
+    apple: '/lytgiticon.png',
   },
 };
 

@@ -23,11 +23,11 @@ export function HeroSection() {
         <div className="flex items-center justify-center space-x-4 mb-8">
           <div className="w-16 h-16 relative">
             <Image
-              src="/statspet.png"
+              src="/lytgitheader.png"
               alt="LytGit Logo"
               width={64}
               height={64}
-              className="rounded-lg dark:brightness-110 dark:contrast-110"
+              className="object-contain mix-blend-multiply dark:invert"
             />
           </div>
           <div className="w-12 h-12 bg-gradient-to-br from-neutral-800 to-neutral-600 dark:from-neutral-200 dark:to-neutral-400 rounded-xl flex items-center justify-center">
