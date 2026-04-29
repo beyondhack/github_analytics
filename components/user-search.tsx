@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Search, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const FAMOUS_USERS = [
 
 export function UserSearch({ onUserFound, loading, setLoading }: UserSearchProps) {
   const [username, setUsername] = useState('');
+  const router = useRouter();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ export function UserSearch({ onUserFound, loading, setLoading }: UserSearchProps
     setLoading(true);
     try {
       const user = await fetchGitHubUser(username.trim());
-      window.history.pushState({}, '', `/?u=${user.login}`);
+      router.push(`/?u=${user.login}`);
       onUserFound(user);
       toast.success(`Found ${user.name || user.login}!`);
     } catch (error) {
@@ -52,7 +54,7 @@ export function UserSearch({ onUserFound, loading, setLoading }: UserSearchProps
     setLoading(true);
     try {
       const user = await fetchGitHubUser(randomUser);
-      window.history.pushState({}, '', `/?u=${user.login}`);
+      router.push(`/?u=${user.login}`);
       onUserFound(user);
       toast.success(`Found ${user.name || user.login}! 🍀`);
     } catch (error) {

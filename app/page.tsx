@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/header';
 import { HeroSection } from '@/components/hero-section';
@@ -39,7 +39,10 @@ function OAuthCallbackHandler() {
       refreshSession();
       clearTokenCache();
       // Clean URL
-      window.history.replaceState({}, '', '/');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('code');
+      url.searchParams.delete('state');
+      window.history.replaceState({}, '', url.toString());
       toast.success('Successfully logged in with GitHub!');
     }
   }, [searchParams, refreshSession]);
@@ -51,31 +54,36 @@ function HomeContent() {
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const u = searchParams.get('u');
 
   useEffect(() => {
-    if (u && (!user || user.login.toLowerCase() !== u.toLowerCase())) {
-      const fetchUser = async () => {
-        setLoading(true);
-        try {
-          const { fetchGitHubUser } = await import('@/lib/github-api');
-          const data = await fetchGitHubUser(u);
-          setUser(data);
-        } catch (error) {
-          toast.error(`User ${u} not found`);
-          // Clean up URL if invalid
-          window.history.replaceState({}, '', '/');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchUser();
+    if (u) {
+      if (!user || user.login.toLowerCase() !== u.toLowerCase()) {
+        const fetchUser = async () => {
+          setLoading(true);
+          try {
+            const { fetchGitHubUser } = await import('@/lib/github-api');
+            const data = await fetchGitHubUser(u);
+            setUser(data);
+          } catch (error) {
+            toast.error(`User ${u} not found`);
+            // Clean up URL if invalid
+            router.replace('/');
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchUser();
+      }
+    } else {
+      // If URL does not have 'u', ensure user state is cleared
+      setUser(null);
     }
-  }, [u, user]);
+  }, [u, user, router]);
 
   const handleReset = () => {
-    setUser(null);
-    window.history.replaceState({}, '', '/');
+    router.push('/');
   };
 
   return (
